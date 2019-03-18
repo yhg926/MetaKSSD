@@ -1,0 +1,98 @@
+#ifndef COMMAND_DIST
+#define COMMAND_DIST
+
+#include "global_basic.h"
+#include "command_dist_wrapper.h"
+#include "command_shuffle.h"
+#include <string.h>
+
+// memory management
+#define DISM_MEM_PCT 0.25 //largest memory percent dismtrix can occupy
+#define CO_MEM_PCT 0.125 //largest memory percent .co can occupy
+
+typedef struct mem_dispatch
+{
+  bool has_ref;
+  bool has_arg;
+  bool dm_inmem; //determine wether distance matrix in memory.
+  bool keep_coindisk;  //determine wether keep intermedia .co file in file.
+  bool keep_mcoinmem; //determine wether keep .mco in mem when make .co file.
+  bool alphabet_group; //wether group objs by alphabet.
+  bool multiple_composition;
+
+  enum{
+    OBJ_COMPATIBLE = 4096, //obj compatible mode, 4 bit for obj,12 bits for gid
+    OBJ_TRADITION = 16384, //obj incompatible,no alphabet group, 2bit obj, 14 bits gid
+    OBJ_GROUP = 65536, // objs grouped by alphabet, 0bits obj,16 bits gid
+  } enum_bin_sz ;
+
+  enum{
+     SLIM, //use small self define binsize due to memory constraints
+     STD,  //use BIN_SZ
+     ALL,  //no bin and all genomes in, for reference seqs only, may use int size genome id.
+  } gbin  ;
+
+  enum {
+    MAKE_REF, //make and output ref .mco only, no distance compute and query search ( -r no -l/args)
+    REF_QRY, //ouput top n, or distance < x ref seqs for each input query (need both -r and -l/args)
+    DIST, //output distance matrix/tab distance (no -r, use -l/args, use -t if tab distance )
+  } usage_mode;
+
+  bool mco_info; //add info column for mco file
+
+} mem_dispatch_t ;
+
+
+typedef struct mem_usage_stat
+{
+  llong shuffled_subctx_arr_sz;
+  llong input_file_name_sz;
+  llong others; // stack usage, threads ...
+} mem_usage_stat_t;
+
+typedef long long int llint;
+typedef struct co_dirstat
+{
+	unsigned int shuf_id;
+  int comp_num; // components number
+  int infile_num; // .co file num, .co file with many components only count as 1
+  //int comp_sz[comp_num * infile_num]; // do this if storage all .co per mco bin in one file
+	llong all_ctx_ct;	
+} co_dstat_t;
+
+typedef struct mco_dirstat
+{
+	unsigned int shuf_id;
+  int comp_num; // components number
+  int infile_num; // use to compute last bin size
+} mco_dstat_t;
+
+
+
+//for use in command_decomopse and iseqroco.c only, not for shuffle.c, do not include in shuffle.c
+extern dim_shuffle_t* dim_shuffle;  
+extern unsigned int hashsize;
+extern int component_num;
+
+int dist_dispatch(struct dist_opt_val* opt_val);
+infile_tab_t* dist_organize_infiles (dist_opt_val_t *opt_val);
+infile_tab_t* dist_organize_refpath (dist_opt_val_t *opt_val);
+//const char* get_co_dstat_fpath(const char *refpath); 
+const char* test_get_fullpath(const char *parent_path, const char *dstat_f);
+dim_shuffle_t *get_dim_shuffle( dist_opt_val_t *opt_val_in );
+int get_hashsz(dist_opt_val_t *opt_val_in, dim_shuffle_t *dim_shuffle_in );
+const char * run_stageI (dist_opt_val_t *opt_val,infile_tab_t *seqfile_stat, 
+				int* shuffled_seqfname_ind, const char *co_dir, int p_fit_mem);
+
+void run_stageII(const char * co_dstat_fpath, int p_fit_mem);
+void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir, int p_fit_mem);
+void dist_print( const char *distf, FILE *dist_fp );
+void fname_dist_print(int ref_bin_code, int qry_fcode, const char *distout_dir, unsigned int*ref_ctx_ct_list,
+      unsigned int*qry_ctx_ct_list, char (*refname)[PATHLEN], char (*qryfname)[PATHLEN], FILE *dout_fp);
+#endif 
+
+
+
+
+
+
