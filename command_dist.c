@@ -85,6 +85,8 @@ int dist_dispatch(dist_opt_val_t *opt_val)
 real_time_mem -=  mem_usage_stat.input_file_name_sz;			
 
 			dim_shuffle = get_dim_shuffle(opt_val);
+//			printf("shufid=%d,k=%d,L=%d\n",dim_shuffle->dim_shuffle_stat.id,dim_shuffle->dim_shuffle_stat.k,
+//				dim_shuffle->dim_shuffle_stat.drlevel);
   		hashsize = get_hashsz(opt_val, dim_shuffle);
   		seq2co_global_var_initial();
   		mem_usage_stat.shuffled_subctx_arr_sz = (1LLU << 4*( dim_shuffle->dim_shuffle_stat.subk) )*sizeof(int);
@@ -321,7 +323,7 @@ int get_hashsz(dist_opt_val_t *opt_val_in, dim_shuffle_t *dim_shuffle_in )
           "drlevel=%d\n"
           "primer_ind=%d\n"
           "hashsize=%u\n",
-    dim_reduce_rate,ctx_space_sz,opt_val_in->k, dim_shuffle_in->dim_shuffle_stat.drlevel, primer_ind, hashsize_get);
+    dim_reduce_rate,ctx_space_sz,dim_shuffle_in->dim_shuffle_stat.k, dim_shuffle_in->dim_shuffle_stat.drlevel, primer_ind, hashsize_get);
 
 	return hashsize_get ;
 }
@@ -554,6 +556,11 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
 		//create dist file
 #pragma omp parallel for  num_threads(p_fit_mem) schedule(guided)
 		for( int k=0; k< co_dstat_readin.infile_num; k++){
+
+			if(qry_ctx_ct_list[k]==0){
+				warnx("%dth co file is empty",k);
+				continue;
+			}
 			char dist_fcode[PATHLEN];
 			sprintf(dist_fcode,"%s/%d.%d.dist", distout_dir, i, k );
 
@@ -572,6 +579,9 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
 
 #pragma omp parallel for  num_threads(p_fit_mem) schedule(guided)
 			for(int k=0; k< co_dstat_readin.infile_num; k++){
+
+				if(qry_ctx_ct_list[k]==0) continue;
+
         int tid = 0;
 #ifdef _OPENMP
         tid = omp_get_thread_num();
@@ -583,7 +593,7 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
 				int fd;
 				if( ( (fd = open(dist_fcode,O_RDWR, 0600) ) == -1) )
          err(errno,"mco_co_dist()::distfile = %s[tid = %d]",dist_fcode,tid);
-
+				
 				ctx_obj_ct_t * ctx_obj_ct = mmap(NULL, binsz*(sizeof(ctx_obj_ct_t)), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0); 		
 				if(ctx_obj_ct == MAP_FAILED) err(errno,"ctx_obj_ct mmap error");				
 				
@@ -608,7 +618,8 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
 	if( (distfp = fopen(distf,"a")) == NULL ) err(errno,"mco_co_dist():%s",distf);
 	for(int i=0; i<=ref_bin_num;i++ ){
 		for ( int k = 0; k < co_dstat_readin.infile_num; k++ ){
-			fname_dist_print(i,k,distout_dir,ref_ctx_ct_list,qry_ctx_ct_list,mcofname,cofname,distfp);
+			if(qry_ctx_ct_list[k]>0)
+				fname_dist_print(i,k,distout_dir,ref_ctx_ct_list,qry_ctx_ct_list,mcofname,cofname,distfp);
 		}
 	}
 

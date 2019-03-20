@@ -57,7 +57,7 @@ void seq2co_global_var_initial(void)
 	half_outctx_len = half_ctx_len - half_subctx_len;
   drlevel = dim_shuffle->dim_shuffle_stat.drlevel;
 	hashlimit = hashsize * LD_FCTR ;
-
+	printf("rand_id=%d\thalf_ctx_len=%d\thashsize=%d\thashlimit=%d\n",rand_id,half_ctx_len,hashsize,hashlimit);
 //	printf("%d\t%d\t%d\n",COMPONENT_SZ,half_ctx_len,drlevel );
 	component_num = half_ctx_len - drlevel > COMPONENT_SZ ? 
 								 1LU << 4*(half_ctx_len - drlevel - COMPONENT_SZ ) : 1  ; 
@@ -98,6 +98,7 @@ llong * fasta2co(char* seqfname, llong *co)
 	if(! (newLen >0) ) 	err(errno,"fastco():eof or fread error file=%s",seqfname);
 
 	llong base = 1; char ch; int basenum;
+	unsigned int keycount = 0;
 	// core function begin
 	for(int pos = 0; pos <= newLen; pos++) 
 	{	
@@ -135,7 +136,7 @@ llong * fasta2co(char* seqfname, llong *co)
       continue;
 		}
 		else {
-      warnx("ignorn illegal charactor%c \n",ch);
+    //  warnx("ignorn illegal charactor%c \n",ch);
       base=1;
       continue;
     };
@@ -155,15 +156,15 @@ llong * fasta2co(char* seqfname, llong *co)
             	>> ( drlevel*4 ) ) // subctx dim reduced
             	+  pfilter ; //  subctx dim after reduction
 
-			unsigned int i,n,count = 0;
+			unsigned int i,n ;
     	for(i=0;i<hashsize;i++)
     	{
       	n = HASH(drtuple,i,hashsize);
       	if (co[n] == 0)
       	{
         	co[n] = drtuple;
-        	count++;
-        	if( count > hashlimit)
+        	keycount++;
+        	if( keycount > hashlimit)
           	err(errno,"the context space is too crowd, try rerun the program using -k%d", half_ctx_len + 1);
         	break;
       	}
@@ -201,6 +202,7 @@ llong * fastq2co(char* seqfname, llong *co, int Q, int M )
 	fgets(qual,LEN,infp);  fgets(qual,LEN,infp);
 //	if(Q != -1) { 		};
 	llong base = 1; char ch ; int basenum,line_num = 0 ;
+	unsigned int keycount =0 ;
 	for(int pos = 0; pos < strlen(seq); pos++){
 		if(seq[pos] == '\n' ){
 			fgets(seq,LEN,infp); fgets(seq,LEN,infp);
@@ -221,11 +223,12 @@ llong * fastq2co(char* seqfname, llong *co, int Q, int M )
 				crvstuple = ( crvstuple >> 2 ) + (((llong)basenum^3LLU) << crvsaddmove);
 				base++;
 			} 
+
 			else {
-				if (qual[pos] < Q)
-					warnx("in file %s line %d skip low quality charactor '%c[%c]'\n",seqfname, line_num+2 ,ch,qual[pos]);
-				else
-					warnx("in file %s line %d ignorn illegal charactor '%c'\n",seqfname,line_num+2,ch);
+			//	if (qual[pos] < Q)
+			//		warnx("in file %s line %d skip low quality charactor '%c[%c]'\n",seqfname, line_num+2 ,ch,qual[pos]);
+		 //	else warnx("in file %s line %d ignorn illegal charactor '%c'\n",seqfname,line_num+2,ch);
+
 				base = 1;
 				continue;
 			};
@@ -242,14 +245,13 @@ llong * fastq2co(char* seqfname, llong *co, int Q, int M )
               >> ( drlevel*4 ) ) // subctx dim reduced
               +  pfilter ;
 			
-			unsigned int i,n,count = 0;
+			unsigned int i,n ;
 			for(i=0;i<hashsize;i++)	{
 				n = HASH(drtuple, i, hashsize);
 				if (co[n] == 0LLU){
-					co[n] = (drtuple << CT_BIT) + 1LLU ;
-					
-					count++;
-          if( count > hashlimit)
+					co[n] = (drtuple << CT_BIT) + 1LLU ;					
+					keycount++;
+          if( keycount > hashlimit)
             err(errno,"the context space is too crowd, try rerun the program using -k%d", half_ctx_len + 1);
 					break;
 				} else if ( ( co[n] >> CT_BIT ) == drtuple ) {

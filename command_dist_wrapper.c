@@ -34,7 +34,7 @@ static struct argp_option opt_dist[] =
 	{"halfKmerlength",'k',"INT",0, "set half Kmer length: 2-15[8]\v" },
 	{"threadN",'p',"INT",0,"set threads number[1]\v"},
 	{"list",'l',"file",0,"a file contain paths for all sequences\v"},
-	{"DimRdcLevel",'L',"INT",0,"Dimension Reduction level[2]\v"},
+	{"DimRdcLevel",'L',"INT",0,"Dimension Reduction level or provide .shuf file[2]\v"},
 	{"maxMemory",'m',"NUM",0,"maximal memory (in G) usage allowed\v"},
 	{"LstKmerOcrs",'n',"INT",0,"Specify the Least Kmer occurence in fastq file\v"},
 	{"quality",'q',"INT",0,"Filter Kmer with lowest base quality < q (Phred)\v"},
