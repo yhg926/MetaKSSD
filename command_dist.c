@@ -87,7 +87,7 @@ real_time_mem -=  mem_usage_stat.input_file_name_sz;
 			dim_shuffle = get_dim_shuffle(opt_val);
 //			printf("shufid=%d,k=%d,L=%d\n",dim_shuffle->dim_shuffle_stat.id,dim_shuffle->dim_shuffle_stat.k,
 //				dim_shuffle->dim_shuffle_stat.drlevel);
-  		hashsize = get_hashsz(opt_val, dim_shuffle);
+  		hashsize = get_hashsz(dim_shuffle);
   		seq2co_global_var_initial();
   		mem_usage_stat.shuffled_subctx_arr_sz = (1LLU << 4*( dim_shuffle->dim_shuffle_stat.subk) )*sizeof(int);
 real_time_mem -= mem_usage_stat.shuffled_subctx_arr_sz;
@@ -235,7 +235,7 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 real_time_mem -=  mem_usage_stat.input_file_name_sz;
 
 					dim_shuffle = get_dim_shuffle(opt_val);
-      		hashsize = get_hashsz(opt_val, dim_shuffle);
+      		hashsize = get_hashsz(dim_shuffle);
       		seq2co_global_var_initial();
       		mem_usage_stat.shuffled_subctx_arr_sz = (1LLU << 4*( dim_shuffle->dim_shuffle_stat.subk) )*sizeof(int);
 real_time_mem -= mem_usage_stat.shuffled_subctx_arr_sz;
@@ -297,11 +297,11 @@ dim_shuffle_t *get_dim_shuffle( dist_opt_val_t *opt_val_in )
   return read_dim_shuffle_file(shuf_infile_name);
 };
 
-int get_hashsz(dist_opt_val_t *opt_val_in, dim_shuffle_t *dim_shuffle_in )
+int get_hashsz(dim_shuffle_t *dim_shuffle_in )
 {
 	int dim_reduce_rate = 1 << 4*dim_shuffle_in->dim_shuffle_stat.drlevel;
-	llong ctx_space_sz = 1LLU << 4*( opt_val_in->k - dim_shuffle_in->dim_shuffle_stat.drlevel );
-  int primer_ind = 4*( opt_val_in->k - dim_shuffle_in->dim_shuffle_stat.drlevel ) - CTX_SPC_USE_L - 7;
+	llong ctx_space_sz = 1LLU << 4*( dim_shuffle_in->dim_shuffle_stat.k - dim_shuffle_in->dim_shuffle_stat.drlevel );
+  int primer_ind = 4*( dim_shuffle_in->dim_shuffle_stat.k - dim_shuffle_in->dim_shuffle_stat.drlevel ) - CTX_SPC_USE_L - 7;
   // check primer_ind
   if(primer_ind < 0 || primer_ind > 24 ){
     int k_add = primer_ind < 0 ?  (1 + (0-primer_ind)/4)  :  - (1 + ( primer_ind - 24 )/4)  ;
@@ -313,8 +313,8 @@ int get_hashsz(dist_opt_val_t *opt_val_in, dim_shuffle_t *dim_shuffle_in )
     "ctx_space size = %llu\n"
     "CTX space usage limit = %lf\n\n"
     "try rerun the program with option -k = %d",
-    primer_ind, opt_val_in->k, dim_shuffle_in->dim_shuffle_stat.drlevel,ctx_space_sz,
-       (double)1/(1 << CTX_SPC_USE_L),opt_val_in->k+k_add );
+    primer_ind, dim_shuffle_in->dim_shuffle_stat.k, dim_shuffle_in->dim_shuffle_stat.drlevel,ctx_space_sz,
+       (double)1/(1 << CTX_SPC_USE_L),dim_shuffle_in->dim_shuffle_stat.k + k_add );
   };
   int hashsize_get = primer[primer_ind];
   fprintf(logfp,"dimension reduced %d\n"
@@ -717,16 +717,25 @@ void fname_dist_print(int ref_bin_code, int qry_fcode, const char *distout_dir, 
 	ctx_obj_ct = mmap(0, s.st_size , PROT_READ, MAP_PRIVATE, fd, 0);
 	check ( ctx_obj_ct == MAP_FAILED, "mmap %s failed: %s", full_distfcode, strerror (errno));
 //	fprintf(dout_fp,"output %s\n",full_distfcode);	
-	double jac_ind, mash_dist;
-
-	for(int i = 0;i < s.st_size/sizeof(ctx_obj_ct_t); i++) { 
+	double jac_ind,contain_ind,mash_dist,aaf_dist;
+	int smallerKset;
+	for(int i = 0;i < s.st_size/sizeof(ctx_obj_ct_t); i++) {
+ 
 		jac_ind = (double)ctx_obj_ct[i] / ( ref_ctx_ct_list[ref_bin_code*BIN_SZ + i] 
 						+ qry_ctx_ct_list[qry_fcode] - ctx_obj_ct[i] ) ;
+
+		smallerKset =	ref_ctx_ct_list[ref_bin_code*BIN_SZ + i] < qry_ctx_ct_list[qry_fcode] ?
+									ref_ctx_ct_list[ref_bin_code*BIN_SZ + i] : qry_ctx_ct_list[qry_fcode] ;		
+
+		contain_ind = (double)ctx_obj_ct[i] / smallerKset ;
 		mash_dist = jac_ind ==1? 0: -log(2*jac_ind/(1+jac_ind)) / ctx_len ;
-		if(mash_dist < mutdistance_thre)
-			fprintf(dout_fp,"%s\t%s\t%u|%u|%u\t%lf\t%lf\n",
+		aaf_dist = contain_ind==1? 0: -log(contain_ind) / ctx_len ;
+				
+
+		if(aaf_dist < mutdistance_thre)
+			fprintf(dout_fp,"%s\t%s\t%u|%u|%u\t%lf\t%lf\t%lf\t%lf\n",
 				qryfname[qry_fcode],refname[ref_bin_code*BIN_SZ + i],ctx_obj_ct[i],ref_ctx_ct_list[ref_bin_code*BIN_SZ + i],
-					qry_ctx_ct_list[qry_fcode],jac_ind,mash_dist);			
+					qry_ctx_ct_list[qry_fcode],jac_ind,mash_dist,contain_ind,aaf_dist);			
 	}
 	close(fd);
   munmap(ctx_obj_ct, s.st_size);
