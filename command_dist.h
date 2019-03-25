@@ -80,7 +80,7 @@ infile_tab_t* dist_organize_refpath (dist_opt_val_t *opt_val);
 //const char* get_co_dstat_fpath(const char *refpath); 
 const char* test_get_fullpath(const char *parent_path, const char *dstat_f);
 dim_shuffle_t *get_dim_shuffle( dist_opt_val_t *opt_val_in );
-int get_hashsz(dist_opt_val_t *opt_val_in, dim_shuffle_t *dim_shuffle_in );
+int get_hashsz(dim_shuffle_t *dim_shuffle_in );
 const char * run_stageI (dist_opt_val_t *opt_val,infile_tab_t *seqfile_stat, 
 				int* shuffled_seqfname_ind, const char *co_dir, int p_fit_mem);
 

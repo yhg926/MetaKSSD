@@ -32,7 +32,7 @@
 //
 #define MCO_BUF_S 4096 // buf size of reading/analysis mco 
 	//COMPONENT_SZ control .co file divided how many components 
-#define COMPONENT_SZ 6//or 7, default unit component dimension size = 16^(COMPONENT_SZ) or 1<<4*(COMPONENT_SZ)
+#define COMPONENT_SZ 7 //, default unit component dimension size = 16^(COMPONENT_SZ) or 1<<4*(COMPONENT_SZ)
 #define CTX_SPC_USE_L 8 //ctx space occupy rate limit = 1/(1<<CTX_SPC_USE_L)  
 #define CTX_DR_LMT 100 //limit for least CTX after dimensionality reduction
 #define LD_FCTR 0.6 //hash function load factor
