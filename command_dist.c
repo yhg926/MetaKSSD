@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/sysinfo.h>
 #include <math.h>
+#include <tgmath.h>
 #include <time.h>
 #include <unistd.h>
 #include <zlib.h>
@@ -42,7 +43,7 @@ static inline void mco_co_dist_core(gidobj_t** unit_arrmco, char *co_fcode_in, i
             mco_co_dist_t shared_ctx_num_in);
 
 //global distance threshold parameter, need initialize before use
-static int ctx_len, neighbor_num ;
+static int neighbor_num ;
 static double mutdistance_thre ;
 //==============functions================//
 
@@ -179,10 +180,8 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 					err(errno, "qry comp_num: %d not match ref comp_num: %d",co_qry_dstat.comp_num, mco_ref_dstat.comp_num);
 
 				//initiital global distance output parameter before distance compute
-				ctx_len = 2*opt_val->k ;
 				neighbor_num = opt_val->num_neigb ;
 				mutdistance_thre = opt_val->mut_dist_max ;			
-
 				mco_co_dist(opt_val->refpath, opt_val->remaining_args[0], distdir, opt_val->p);
 		  }
 			else if (qrymco_dstat_fpath != NULL)
@@ -407,6 +406,8 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
       //write co_stat file
       co_dstat_t co_dstat_wrout;
 			co_dstat_wrout.shuf_id = dim_shuffle->dim_shuffle_stat.id ; 
+			co_dstat_wrout.kmerlen = dim_shuffle->dim_shuffle_stat.k * 2;
+			co_dstat_wrout.dim_rd_len = dim_shuffle->dim_shuffle_stat.drlevel * 2 ;
       co_dstat_wrout.comp_num = component_num ;
       co_dstat_wrout.infile_num = seqfile_stat->infile_num;
 			co_dstat_wrout.all_ctx_ct = all_ctx_ct; 
@@ -448,6 +449,8 @@ void run_stageII(const char * co_dstat_fpath, int p_fit_mem)
 			if( ( mco_stat_fp = fopen(mco_dstat_fpath,"wb")) == NULL ) err(errno,"run_stageII(():%s",mco_dstat_fpath);
 			mco_dstat_t mco_dstat_writeout;	
 			mco_dstat_writeout.shuf_id = co_dstat_readin.shuf_id;		
+			mco_dstat_writeout.kmerlen = co_dstat_readin.kmerlen ;
+      mco_dstat_writeout.dim_rd_len = co_dstat_readin.dim_rd_len ;
 			mco_dstat_writeout.infile_num = co_dstat_readin.infile_num;
 			mco_dstat_writeout.comp_num = co_dstat_readin.comp_num ;
 			fwrite(&mco_dstat_writeout,sizeof(mco_dstat_writeout),1, mco_stat_fp );
@@ -502,7 +505,7 @@ void run_stageII(const char * co_dstat_fpath, int p_fit_mem)
 }
 
 static ctx_obj_ct_t initial_dist[BIN_SZ];
-
+static int ref_seq_num,qry_seq_num,kmerlen,dim_reduct_len;
 void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir, int p_fit_mem)
 {
 	fprintf(logfp,"run mco_co_dist(), %d threads used\n",p_fit_mem);
@@ -522,6 +525,7 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
   co_dstat_t co_dstat_readin ;
  	fread(&mco_dstat_readin,sizeof(mco_dstat_readin),1,refmco_dstat_fp);
 	fread(&co_dstat_readin,sizeof(co_dstat_readin),1,qryco_dstat_fp);
+
 	//read ctx_ct_list
 	unsigned int * qry_ctx_ct_list = malloc(co_dstat_readin.infile_num * sizeof(unsigned int));
 	unsigned int * ref_ctx_ct_list = malloc(mco_dstat_readin.infile_num * sizeof(unsigned int)); 
@@ -541,8 +545,8 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
     mco_dstat_readin.comp_num, co_dstat_readin.comp_num);			
 	if(!(mco_dstat_readin.shuf_id == co_dstat_readin.shuf_id))
 		err(errno,"query args not match ref args: ref.shuf_id = %d vs. %d = qry.shuf_id",
-    mco_dstat_readin.shuf_id, co_dstat_readin.shuf_id);
-		
+    mco_dstat_readin.shuf_id, co_dstat_readin.shuf_id);	
+	
 	int ref_bin_num = mco_dstat_readin.infile_num / BIN_SZ;
 	int binsz; //comp_sz = (1 << 4*COMPONENT_SZ) ;	
   // set when use mco_co_dist_core() 
@@ -608,12 +612,16 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
 			free_unit_arrmco(unit_arrmco_readin);
 		}
 	}
-	// distance output 
+	//=== distance output======// 
+	/* global var iniital */
+	ref_seq_num = mco_dstat_readin.infile_num ;
+  qry_seq_num = co_dstat_readin.infile_num ;
+	kmerlen = co_dstat_readin.kmerlen;
+  dim_reduct_len = co_dstat_readin.dim_rd_len;
 	char distf[PATHLEN];
 	sprintf(distf, "%s/distance.out", distout_dir);
 	fprintf(logfp,"distance output to : %s\n",distf);
 	printf("distance output to : %s\n",distf);
-
 	FILE *distfp;
 	if( (distfp = fopen(distf,"a")) == NULL ) err(errno,"mco_co_dist():%s",distf);
 	for(int i=0; i<=ref_bin_num;i++ ){
@@ -622,7 +630,6 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
 				fname_dist_print(i,k,distout_dir,ref_ctx_ct_list,qry_ctx_ct_list,mcofname,cofname,distfp);
 		}
 	}
-
 	fclose(distfp);
 
 	free(ref_ctx_ct_list);
@@ -717,25 +724,58 @@ void fname_dist_print(int ref_bin_code, int qry_fcode, const char *distout_dir, 
 	ctx_obj_ct = mmap(0, s.st_size , PROT_READ, MAP_PRIVATE, fd, 0);
 	check ( ctx_obj_ct == MAP_FAILED, "mmap %s failed: %s", full_distfcode, strerror (errno));
 //	fprintf(dout_fp,"output %s\n",full_distfcode);	
-	double jac_ind,contain_ind,mash_dist,aaf_dist;
-	int smallerKset;
+	double jac_ind,contain_ind,Dm,Da,P_K_in_X_XnY, P_K_in_Y_XnY,
+	j_prim, c_prim, Dm_prim, Da_prim, sd_j_prim, sd_c_prim,
+	CI95_j_prim1,	CI95_j_prim2, CI95_c_prim1, CI95_c_prim2,
+	CI95_Dm_prim1,CI95_Dm_prim2,CI95_Da_prim1,CI95_Da_prim2;
+	int Min_XY_size, X_size, Y_size, XnY_size, XuY_size, X_XnY_size, Y_XnY_size ;
+	int alp_size = 4; // dna 	
+
 	for(int i = 0;i < s.st_size/sizeof(ctx_obj_ct_t); i++) {
- 
-		jac_ind = (double)ctx_obj_ct[i] / ( ref_ctx_ct_list[ref_bin_code*BIN_SZ + i] 
-						+ qry_ctx_ct_list[qry_fcode] - ctx_obj_ct[i] ) ;
 
-		smallerKset =	ref_ctx_ct_list[ref_bin_code*BIN_SZ + i] < qry_ctx_ct_list[qry_fcode] ?
-									ref_ctx_ct_list[ref_bin_code*BIN_SZ + i] : qry_ctx_ct_list[qry_fcode] ;		
+		X_size = ref_ctx_ct_list[ref_bin_code*BIN_SZ + i];
+		Y_size = qry_ctx_ct_list[qry_fcode];
+		Min_XY_size = X_size < Y_size ? X_size : Y_size ;
+		XnY_size = ctx_obj_ct[i];
+		XuY_size =  X_size + Y_size - XnY_size ;
+		X_XnY_size = X_size - XnY_size;
+		Y_XnY_size = Y_size- XnY_size;		
 
-		contain_ind = (double)ctx_obj_ct[i] / smallerKset ;
-		mash_dist = jac_ind ==1? 0: -log(2*jac_ind/(1+jac_ind)) / ctx_len ;
-		aaf_dist = contain_ind==1? 0: -log(contain_ind) / ctx_len ;
+		jac_ind = (double)XnY_size / XuY_size;		
+		contain_ind = (double)XnY_size / Min_XY_size ;
+		Dm = jac_ind ==1? 0: -log(2*jac_ind/(1+jac_ind)) / kmerlen ;
+		Da = contain_ind==1? 0: -log(contain_ind) / kmerlen ;
 				
+		P_K_in_X_XnY = 1 - pow( (1- 1/pow(alp_size,(kmerlen - dim_reduct_len) )), X_XnY_size );
+		P_K_in_Y_XnY = 1 - pow( (1- 1/pow(alp_size,(kmerlen - dim_reduct_len) )), Y_XnY_size );
+		double rs = P_K_in_X_XnY * P_K_in_Y_XnY * ( X_XnY_size + Y_XnY_size )
+							/(P_K_in_X_XnY + P_K_in_Y_XnY - 2*P_K_in_X_XnY * P_K_in_Y_XnY);
+		j_prim = ((double)XnY_size - rs) / XuY_size ;
+		c_prim = ((double)XnY_size - rs) / Min_XY_size ;
+		Dm_prim = j_prim == 1? 0:-log(2*j_prim/(1+j_prim)) / kmerlen ;
+		Da_prim = c_prim==1? 0:-log(c_prim) / kmerlen ;
+		
+		sd_j_prim = pow(j_prim*(1 - j_prim) / XuY_size, 0.5) ;
+		sd_c_prim = pow(c_prim*(1 - c_prim) / Min_XY_size,0.5) ;
+		CI95_j_prim1 = j_prim - 1.96*sd_j_prim;
+		CI95_j_prim2 = j_prim + 1.96*sd_j_prim;
+		CI95_c_prim1 = c_prim - 1.96*sd_c_prim;
+		CI95_c_prim2 = c_prim + 1.96*sd_c_prim;
+		CI95_Dm_prim1 = CI95_j_prim2 == 1? 0:-log(2*CI95_j_prim2/(1+CI95_j_prim2)) / kmerlen ;
+		CI95_Dm_prim2 = CI95_j_prim1 == 1? 0:-log(2*CI95_j_prim1/(1+CI95_j_prim1)) / kmerlen ;
+		CI95_Da_prim1 = CI95_c_prim2 == 1? 0:-log(CI95_c_prim2) / kmerlen ; 
+		CI95_Da_prim2 = CI95_c_prim1 == 1? 0:-log(CI95_c_prim1) / kmerlen ;
+			
+		double pv_j_prim = 0.5 * erfc( j_prim / sd_j_prim * pow(0.5,0.5)  );
+		double pv_c_prim = 0.5 * erfc( c_prim/sd_c_prim * pow(0.5,0.5)  );
+		double qv_j_prim = pv_j_prim * ref_seq_num*qry_seq_num ;
+		double qv_c_prim = pv_c_prim * ref_seq_num*qry_seq_num ;
 
-		if(aaf_dist < mutdistance_thre)
-			fprintf(dout_fp,"%s\t%s\t%u|%u|%u\t%lf\t%lf\t%lf\t%lf\n",
-				qryfname[qry_fcode],refname[ref_bin_code*BIN_SZ + i],ctx_obj_ct[i],ref_ctx_ct_list[ref_bin_code*BIN_SZ + i],
-					qry_ctx_ct_list[qry_fcode],jac_ind,mash_dist,contain_ind,aaf_dist);			
+	//	if(Dm_prim < mutdistance_thre)
+			fprintf(dout_fp,"%s\t%s\t%u-%u|%u|%u\t%lf\t%lf\t%lf\t%lf\t%lf[%lf,%lf]\t%lf[%lf,%lf]\t%lf[%lf,%lf]\t%lf[%lf,%lf]\t%E\t%E\t%E\t%E\n", 
+				qryfname[qry_fcode],refname[ref_bin_code*BIN_SZ + i],XnY_size,(unsigned int)rs,X_size,Y_size,jac_ind,Dm,
+        contain_ind,Da,j_prim,CI95_j_prim1,CI95_j_prim2,Dm_prim,CI95_Dm_prim1,CI95_Dm_prim2,c_prim,CI95_c_prim1,
+				CI95_c_prim2,Da_prim,CI95_Da_prim1,CI95_Da_prim2,pv_j_prim,pv_c_prim,qv_j_prim,qv_c_prim);			
 	}
 	close(fd);
   munmap(ctx_obj_ct, s.st_size);

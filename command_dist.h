@@ -54,6 +54,8 @@ typedef long long int llint;
 typedef struct co_dirstat
 {
 	unsigned int shuf_id;
+	int kmerlen; //2*k 
+	int dim_rd_len; //2*drlevel
   int comp_num; // components number
   int infile_num; // .co file num, .co file with many components only count as 1
   //int comp_sz[comp_num * infile_num]; // do this if storage all .co per mco bin in one file
@@ -63,6 +65,8 @@ typedef struct co_dirstat
 typedef struct mco_dirstat
 {
 	unsigned int shuf_id;
+	int kmerlen; //2*k
+	int dim_rd_len; //2*drlevel
   int comp_num; // components number
   int infile_num; // use to compute last bin size
 } mco_dstat_t;
