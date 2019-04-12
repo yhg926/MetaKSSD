@@ -28,7 +28,7 @@ static struct argp_option opt_shuffle[] =
 	{"level",'l',"INT", 0, "the level of dimensionality reduction, this option is used the control the dimensionality reduction rate. The  dimensionality reduction rate is 16^NUM (assuming dna sequence used), e.g. set --reductionLevel=1, the reduction rate will be 16.  The reduction rate is the ratio of the dimension of the whole subcontext space divided by the dimension of drawed subspace, or the ratio of dimension of whole context space divided by dimension of context space after dimensionality reduction, which determine the memory occupy. This value should never larger than the value feed for option -s. To keep the statistical stability of dimensionality reduction, it is suggested the subcontext space dimension after reduction are still large enough( >=256 ), the pragram automatically alert when dimension after reduction are too small.[0]\v",7},
 	{"outfile",'o',"STRING",0,"specify the output file name prefix, if not specify default shuffle named 'default.shuf generated'\v"},
 //	{0,0,0,0,"reserved option for aa:\v",-1},
-	{"usedefault",999,0,0,"All options use default value, which assuming prokaryote genomes, halfCtxLen=9, halfSubctxLen=3, and dimensionality reduction level=1.\v",8}, 
+	{"usedefault",999,0,0,"All options use default value, which assuming prokaryote genomes, halfCtxLen=8, halfSubctxLen=3, and dimensionality reduction level=2.\v",8}, 
   { 0 }
 };
 
@@ -42,8 +42,8 @@ static char doc_shuffle[] =
 dim_shuffle_stat_t dim_shuffle_stat = { 
 0, //id
 8, //k
-0, //subk
-0, // drlevel
+3, //subk
+2, // drlevel
 };
 
 char shuf_out_file_prefix[PATHLEN]="./default";
@@ -59,7 +59,6 @@ static error_t parse_shuffle(int key, char* arg, struct argp_state* state) {
     case 'k':
 		{
 			dim_shuffle_stat.k = atoi(arg);
-			printf("%s shuffle: k, halfCtxLen = %d\n",state->name,atoi(arg));
 			break;
 		}
 		case 's':
@@ -127,7 +126,8 @@ int cmd_shuffle(struct argp_state* state)
   free(argv[0]);
   argv[0] = argv0;
   state->next += argc - 1;
-
+	
+//	printf("%s shuffle: k = %d , halfCtxLen = %d\n",state->name,dim_shuffle_stat->k,dim_shuffle_stat->subk);
   return write_dim_shuffle_file(&dim_shuffle_stat, shuf_out_file_prefix) ;
 }
 
@@ -180,7 +180,7 @@ int write_dim_shuffle_file(dim_shuffle_stat_t* dim_shuffle_stat, char *outfile_p
 	int dim_after_reduction = 1<< 4*(dim_shuffle_stat->subk - dim_shuffle_stat->drlevel);
 	if( dim_after_reduction < MIN_SUBCTX_DIM_SMP_SZ )
 		warnx("dimension after reduction %d is smaller than the suggested minimal"
-		" dimension sample size %d, which might cause loss of robutness",dim_after_reduction,MIN_SUBCTX_DIM_SMP_SZ);	
+		" dimension sample size %d, which might cause loss of robutness, -s %d is suggested",dim_after_reduction,MIN_SUBCTX_DIM_SMP_SZ, dim_shuffle_stat->drlevel+2);	
 	if(strlen(outfile_prefix) + strlen(".shuf") >PATHLEN)
 		err(errno,"output path name %s should less than %d characters",outfile_prefix,PATHLEN);	
 
@@ -201,6 +201,9 @@ int write_dim_shuffle_file(dim_shuffle_stat_t* dim_shuffle_stat, char *outfile_p
 		+ fwrite(shuffled_dim,sizeof(int),1 << 4*dim_shuffle_stat->subk,shuf_out);			
 	fclose(shuf_out);
 	free(shuffled_dim);
+
+	//printf("kssd shuffle: shuf_id=%d, k = %d, halfCtxLen = %d, level= %d\n",
+	//			dim_shuffle_stat->id, dim_shuffle_stat->k,dim_shuffle_stat->subk,dim_shuffle_stat->drlevel);
 	return ret;
 };
 
