@@ -20,7 +20,6 @@ typedef struct
 
 mco_entry_stat_t** co2unitllmco(const char *codirname, int bin_sz, int bin_id, int component_id);
 mco_entry_stat_t** fread_co2unitllmco(const char *codirname, int bin_sz, int bin_id, int component_id);
-void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum, int comp_num, int p_fit_mem);
 
 gidobj_t** llmco2arrmco(mco_entry_stat_t** llmco);
 unsigned int write_unit_arrmco_file(const char* unitmcofname, gidobj_t** arrmco);

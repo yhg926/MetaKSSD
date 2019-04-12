@@ -90,8 +90,7 @@ const char * run_stageI (dist_opt_val_t *opt_val,infile_tab_t *seqfile_stat,
 
 void run_stageII(const char * co_dstat_fpath, int p_fit_mem);
 void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir, int p_fit_mem);
-void mco_cbd_co_dist(dist_opt_val_t *opt_val_in);
-//void mco_cbd_co_dist ( char *refmco_dname, char *qryco_dname,const char *distout_dir, int p_fit_mem, llong mem_limit );
+void mco_cbd_co_dist ( char *refmco_dname, char *qryco_dname, const char *distout_dir, int p_fit_mem); 
 void dist_print( const char *distf, FILE *dist_fp );
 void fname_dist_print(int ref_bin_code, int qry_fcode, const char *distout_dir, unsigned int*ref_ctx_ct_list,
       unsigned int*qry_ctx_ct_list, char (*refname)[PATHLEN], char (*qryfname)[PATHLEN], FILE *dout_fp);

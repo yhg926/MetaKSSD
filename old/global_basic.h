@@ -197,7 +197,7 @@ static inline mmp_uint_t mmp_uint_arr (char *cofname)
 	check (fd < 0, "open %s failed: %s", cofname, strerror (errno));
 	fstat (fd, & s);
 	cofilemmp.fsize = s.st_size;
-	cofilemmp.mmpco = mmap(NULL, s.st_size , PROT_READ, MAP_PRIVATE, fd, 0);	
+	cofilemmp.mmpco = mmap(0, s.st_size , PROT_READ, MAP_PRIVATE, fd, 0);	
 	check ( cofilemmp.mmpco == MAP_FAILED, "mmap %s failed: %s", cofname, strerror (errno));
 	close(fd);
 	return cofilemmp;
