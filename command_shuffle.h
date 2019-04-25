@@ -17,7 +17,7 @@ typedef struct dim_shuffle
 
 
 //minimal allowed subcontext
-#define MIN_SUBCTX_DIM_SMP_SZ 256 
+#define MIN_SUBCTX_DIM_SMP_SZ 4096 //256 
 
 int * shuffle ( int arr[], int len_arr);
 int * shuffleN ( int n, int base);//return shuffled $base based natural number array

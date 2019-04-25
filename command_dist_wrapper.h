@@ -26,6 +26,7 @@ typedef struct dist_opt_val
 	bool stage2; //input is intermedia .co or not
 	int num_neigb; // distance output filter: num of nearest neight 
 	double mut_dist_max;// distance output filter: maximun allow mutation distance
+	bool abundance;
   int num_remaining_args;
   char **remaining_args;
   //char outp[128]= "./";

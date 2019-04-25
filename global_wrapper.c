@@ -43,7 +43,7 @@ static char doc_global[] =
 
 static error_t parse_global(int key, char* arg, struct argp_state* state)
 {
-  struct arg_global* global = state->input;
+ // struct arg_global* global = state->input;
   if(key == '?' || key=='u')
   	state->name = long_domain;
 	else if (key == 'l'){

@@ -268,6 +268,123 @@ llong * fastq2co(char* seqfname, llong *co, int Q, int M )
 	pclose(infp);
 	return co;
 }; // end fastq2co()
+
+// fastq2co with occurence
+// higher 40 bits for Kmer, lower 24 bits for count
+//#define OCCRC_BIT 24 // make sure it is 64 bits machine
+//#define OCCRC_MAX 0xffffffLLU //must be 1<<OCCRC_BIT - 1
+llong * fastq2koc (char* seqfname, llong *co, int Q)
+{
+
+  llong tuple = 0LLU, crvstuple = 0LLU, unituple, drtuple, pfilter;
+  memset(co,0LLU,hashsize*sizeof(llong));
+
+  FILE *infp;
+  char fq_fname[PATHLEN];
+  sprintf(fq_fname,"%s %s",gzpipe_cmd,seqfname);
+  if( (infp=popen(fq_fname,"r")) == NULL ) err(errno,"fastq2co():%s",fq_fname);
+
+  char seq[LEN];
+  char qual[LEN];
+
+  fgets(seq,LEN,infp); fgets(seq,LEN,infp);
+  fgets(qual,LEN,infp);  fgets(qual,LEN,infp);
+
+  llong base = 1; char ch ; int basenum,line_num = 0 ;
+  unsigned int keycount =0 ;
+  for(int pos = 0; pos < strlen(seq); pos++){
+    if(seq[pos] == '\n' ){
+      fgets(seq,LEN,infp); fgets(seq,LEN,infp);
+      fgets(qual,LEN,infp); fgets(qual,LEN,infp);
+      line_num+=4;
+      if( !feof(infp) ) {
+        base = 1;
+        pos = -1;
+        continue ;
+      }
+      else break;
+    }
+    else{
+      ch = seq[pos];
+      basenum = Basemap[(int)ch];
+      if( (basenum != DEFAULT) && ( qual[pos] >= Q ) ){
+        tuple = ( ( tuple<< 2 ) | (llong)basenum ) & tupmask ;
+        crvstuple = ( crvstuple >> 2 ) + (((llong)basenum^3LLU) << crvsaddmove);
+        base++;
+      }
+
+      else {
+        base = 1;
+        continue;
+      };
+    };
+
+    if( base > TL ){ 
+      unituple = tuple < crvstuple ? tuple:crvstuple;
+      unsigned int dim_tup = ((unituple & domask) >> ( (half_outctx_len)*2 ) ) ;
+      pfilter = dim_shuf_arr[dim_tup];
+      if( ( pfilter >= dim_end) || (pfilter < dim_start ) ) continue;
+      pfilter = pfilter - dim_start;
+      drtuple = ( ( (unituple & undomask) //left half outer ctx
+              + ( ( unituple & ( ( 1LLU<< ( half_outctx_len*2) ) - 1)) << (TL*2 - half_outctx_len*4) ) )
+              >> ( drlevel*4 ) ) // subctx dim reduced
+              +  pfilter ;
+
+      unsigned int i,n ;
+      for(i=0;i<hashsize;i++) {
+        n = HASH(drtuple, i, hashsize);
+        if (co[n] == 0LLU){
+          co[n] = (drtuple << OCCRC_BIT) + 1LLU ;
+          keycount++;
+          if( keycount > hashlimit )
+            err(errno,"the context space is too crowd, try rerun the program using -k%d", half_ctx_len + 1);
+          break;
+        } else if ( ( co[n] >> OCCRC_BIT ) == drtuple ) {
+
+            if( (co[n] & OCCRC_MAX) < OCCRC_MAX )
+              co[n]+=1LLU;
+            else
+              co[n]|= OCCRC_MAX ;
+          break ;
+        };
+      }; //end kmer hashing
+    };
+  }// end file hashing
+  pclose(infp);
+  return co;
+}; // end fastq2koc();
+
+llong write_fqkoc2file(char* cofilename, llong *co)
+{
+  int comp_code_bits = half_ctx_len - drlevel > COMPONENT_SZ ? 4*(half_ctx_len - drlevel - COMPONENT_SZ ) : 0  ;
+  FILE **outf;
+  outf = malloc(component_num * sizeof(FILE *));
+  char cofilename_with_component[PATHLEN];
+  for(int i=0;i<component_num ;i++)
+  {
+    sprintf(cofilename_with_component,"%s.%d",cofilename,i);
+    if ( (outf[i] = fopen(cofilename_with_component,"wb") ) == NULL )
+      err(errno,"write_fqkoc2file()") ;
+  };
+
+  unsigned int count, wr = 0;
+	llong newid;
+  for(count=0;count < hashsize; count++)
+  {
+    if( co[count] > 0 ) {
+			newid = ((co[count] >> (comp_code_bits + OCCRC_BIT)) << OCCRC_BIT ) | (co[count] & OCCRC_MAX) ;	
+      fwrite( &newid, sizeof(llong),1,outf[ (co[count] >> OCCRC_BIT ) % component_num ] );
+      wr++;
+    }
+  }
+
+  for(int i=0;i<component_num ;i++)
+    fclose(outf[i]);
+
+	free(outf);
+  return wr;
+};
+
 // need special write fastq 2 co 
 llong write_fqco2file(char* cofilename, llong *co)
 {
@@ -292,6 +409,7 @@ llong write_fqco2file(char* cofilename, llong *co)
 	}
 	for(int i=0;i<component_num ;i++)
   	fclose(outf[i]);
+	free(outf);
 	return wr;
 };
 
@@ -321,6 +439,8 @@ llong wrt_co2cmpn_use_inn_subctx(char* cofilename, llong *co)
 	}
 	for(int i=0;i<component_num ;i++)
    fclose(outf[i]);
+
+	free(outf);
   return wr;
 };
 

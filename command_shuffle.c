@@ -196,6 +196,9 @@ int write_dim_shuffle_file(dim_shuffle_stat_t* dim_shuffle_stat, char *outfile_p
 
 	//shuffled subcontext dimensions;
   int *shuffled_dim = shuffleN(1 << 4*dim_shuffle_stat->subk, 0);
+	//here<- for test only
+	shuffled_dim = shuffle(shuffled_dim,1 << 4*dim_shuffle_stat->subk);
+	shuffled_dim = shuffle(shuffled_dim,1 << 4*dim_shuffle_stat->subk);
 	//write out shuffle_stat + shuffled_dim;
 	int ret = fwrite(dim_shuffle_stat,sizeof(dim_shuffle_stat_t),1,shuf_out) 
 		+ fwrite(shuffled_dim,sizeof(int),1 << 4*dim_shuffle_stat->subk,shuf_out);			

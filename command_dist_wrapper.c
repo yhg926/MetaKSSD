@@ -43,6 +43,7 @@ static struct argp_option opt_dist[] =
 	{"outdir",'o',"<path>",0,"folder path for results files.\v" },
 	{"neighborN_max",'N',"INT",0,"max number of nearest reference genomes.[1]\v"},
 	{"mutDist_max",'D',"FLT",0,"max mutation allowed for distance output.[1]\v"},
+	{"abundance",'A',0,0,"abundance estimate mode.\v"},
 	{"keepcofile",888,0,0,"keep intermedia .co files.\v"},
 	{"stage2",999,0,0,"input is intermedia .co files.\v"},
   { 0 }
@@ -72,6 +73,7 @@ false, // bool keepco; wether keep intermidia .co file or not
 false, // input is intermeida .co folder
 1, //neighborN_max
 1, //mutDist_max
+false, // no abundance
 0, //int num_remaining_args; no option arguments num. 
 NULL //char **remaining_args; no option arguments array.
 } ;
@@ -184,6 +186,11 @@ static error_t parse_dist(int key, char* arg, struct argp_state* state) {
 			dist_opt_val.mut_dist_max = atof(arg);
 			break;
 		}
+		case 'A':
+		{
+			dist_opt_val.abundance = true;
+			break;
+		}
 		case 888:
 		{
 			dist_opt_val.keepco = true;
@@ -265,8 +272,10 @@ const char *mk_dist_rslt_dir (const char *parentdirpath, const char * outdirpath
   sprintf((char *)outfullpath,"%s/%s",parentdirpath,outdirpath);
 
   if(stat(parentdirpath, &dstat) == 0 && S_ISDIR(dstat.st_mode)){
-    if( stat(outfullpath, &dstat) == 0 )
-      err(errno,"dist %s exists",outfullpath);
+    if( stat(outfullpath, &dstat) == 0 ){
+			errno = EEXIST; 
+      err(errno,"%s",outfullpath);
+		}
     else{
      // printf("Making results dir: %s\n",outfullpath);
       mkdir(outfullpath,0777);
