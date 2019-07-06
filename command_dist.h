@@ -9,7 +9,7 @@
 // memory management
 #define DISM_MEM_PCT 0.25 //largest memory percent dismtrix can occupy
 #define CO_MEM_PCT 0.125 //largest memory percent .co can occupy
-
+extern const char co_dstat[];
 typedef struct mem_dispatch
 {
   bool has_ref;

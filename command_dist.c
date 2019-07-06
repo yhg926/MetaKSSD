@@ -900,8 +900,8 @@ void mco_cbd_co_dist(dist_opt_val_t *opt_val_in)
 }//func end
 
 typedef struct koc_dist {
-	ctx_obj_ct_t shared_k_ct;
 	llong shared_koc_ct;
+	ctx_obj_ct_t shared_k_ct;
 } koc_dist_t;
 
 void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in)
@@ -972,11 +972,35 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in)
 	int page_sz = sysconf(_SC_PAGESIZE);
   int comp_sz = (1 << 4*COMPONENT_SZ);
   if( comp_sz % page_sz != 0 ) err(errno,"comp_sz %d is not multiple of page_sz %d ",comp_sz,page_sz );
+//move to here
+	size_t maplength;
+  int bnum_infile;	
+	FILE *cbd_fcode_comp_fp,*cbd_fcode_comp_index_fp;
+  struct stat cbd_fcode_stat;
+  //make sure index file has extra element for computing last cofile length
+  size_t *fco_pos = malloc(sizeof(size_t) * (co_dstat_readin.infile_num + 1) );
+  size_t *mco_offset_index = malloc(sizeof(size_t) * comp_sz);
+  unsigned int *mco_bin_index =  malloc( sizeof(unsigned int) * comp_sz * ref_bin_num );
+  gidobj_t* mco_mem = malloc( sizeof(gidobj_t) * 442317172 ); //set to largest mmco
+
+  char mco_fcode[PATHLEN]; char mco_index_fcode[PATHLEN];
+  char co_cbd_fcode[PATHLEN];char co_cbd_index_fcode[PATHLEN];
+//--end move//
+	//global var set
+	ref_seq_num = mco_dstat_readin.infile_num ;
+  qry_seq_num = co_dstat_readin.infile_num ;
+  kmerlen = co_dstat_readin.kmerlen;
+  dim_reduct_len = co_dstat_readin.dim_rd_len;
+  char distf[PATHLEN];
+  sprintf(distf, "%s/distance.out", distout_dir);
+/*
+  fprintf(logfp,"distance output to : %s\n",distf);
+  printf("distance output to : %s\n",distf);
+*/
 	// koc compatible condition
 	if(co_dstat_readin.koc){
-	
 	  size_t disf_sz = (size_t)mco_dstat_readin.infile_num*co_dstat_readin.infile_num*sizeof(koc_dist_t) ;
-  	if(ftruncate(dist_bfp, disf_sz) == -1) err(errno,"mco_cbd_co_dist()::ftruncate");
+  	if(ftruncate(dist_bfp, disf_sz) == -1) err(errno,"mco_cbd_koc_dist()::ftruncate");
   	close(dist_bfp);
 
   	dist_bfp = open(onedist,O_RDWR, 0600);
@@ -992,20 +1016,6 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in)
 		int num_cof_batch = num_unit_mem*page_sz;
  	 	size_t unitsz_distf_mapped = (size_t)num_cof_batch * mco_dstat_readin.infile_num * sizeof(koc_dist_t) ;
   	int num_mapping_distf = co_dstat_readin.infile_num / num_cof_batch ;
-  	size_t maplength;
-  	int bnum_infile; //bytes need read in the mem. and num of files in all cofiles need compare in one batch
-
-  	FILE *cbd_fcode_comp_fp,*cbd_fcode_comp_index_fp;
-  	struct stat cbd_fcode_stat;
-  	//make sure index file has extra element for computing last cofile length
-  	size_t *fco_pos = malloc(sizeof(size_t) * (co_dstat_readin.infile_num + 1) );
-  	size_t *mco_offset_index = malloc(sizeof(size_t) * comp_sz);
-  	unsigned int *mco_bin_index =  malloc( sizeof(unsigned int) * comp_sz * ref_bin_num );
-  	gidobj_t* mco_mem = malloc( sizeof(gidobj_t) * 442317172 ); //set to largest mmco
-
-  	char mco_fcode[PATHLEN]; char mco_index_fcode[PATHLEN];
-  	char co_cbd_fcode[PATHLEN];char co_cbd_index_fcode[PATHLEN];
-
   	for(int b=0;b<=num_mapping_distf;b++){
 
     	if(b==num_mapping_distf){
@@ -1078,8 +1088,6 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in)
           ctx_obj_ct, ctx_obj_ct + (size_t)b*num_cof_batch*mco_dstat_readin.infile_num);
 
         free(cbd_fcode_mem);
-        munmap(mco_offset_index, comp_sz * sizeof(size_t));
-        munmap(mco_bin_index,comp_sz*ref_bin_num*sizeof(unsigned int) );
 
       }//components loop end
 
@@ -1088,15 +1096,16 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in)
     	munmap(ctx_obj_ct + (size_t)b*num_cof_batch*mco_dstat_readin.infile_num,  maplength);
   	} // batch loop end
   	free(fco_pos);
+/*
   	//=== distance output======//
-  	/* global var iniital */
+  	// global var iniital 
   	ref_seq_num = mco_dstat_readin.infile_num ;
   	qry_seq_num = co_dstat_readin.infile_num ;
   	kmerlen = co_dstat_readin.kmerlen;
   	dim_reduct_len = co_dstat_readin.dim_rd_len;
   	char distf[PATHLEN];
   	sprintf(distf, "%s/distance.out", distout_dir);
-
+*/
   	fprintf(logfp,"distance output to : %s\n",distf);
   	printf("distance output to : %s\n",distf);
 		koc_dist_print_nobin(distout_dir,ref_seq_num, qry_seq_num, ref_ctx_ct_list, qry_ctx_ct_list,num_cof_batch,mcofname, cofname);
@@ -1121,19 +1130,6 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in)
     int num_cof_batch = num_unit_mem*page_sz;
     size_t unitsz_distf_mapped = (size_t)num_cof_batch * mco_dstat_readin.infile_num * sizeof(ctx_obj_ct_t) ;
     int num_mapping_distf = co_dstat_readin.infile_num / num_cof_batch ;
-    size_t maplength;
-    int bnum_infile; //bytes need read in the mem. and num of files in all cofiles need compare in one batch
-
-    FILE *cbd_fcode_comp_fp,*cbd_fcode_comp_index_fp;
-    struct stat cbd_fcode_stat;
-    //make sure index file has extra element for computing last cofile length
-    size_t *fco_pos = malloc(sizeof(size_t) * (co_dstat_readin.infile_num + 1) );
-    size_t *mco_offset_index = malloc(sizeof(size_t) * comp_sz);
-    unsigned int *mco_bin_index =  malloc( sizeof(unsigned int) * comp_sz * ref_bin_num );
-    gidobj_t* mco_mem = malloc( sizeof(gidobj_t) * 442317172 ); //set to largest mmco
-
-    char mco_fcode[PATHLEN]; char mco_index_fcode[PATHLEN];
-    char co_cbd_fcode[PATHLEN];char co_cbd_index_fcode[PATHLEN];
 
     for(int b=0;b<=num_mapping_distf;b++){
 
@@ -1206,8 +1202,6 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in)
           ctx_obj_ct, ctx_obj_ct + (size_t)b*num_cof_batch*mco_dstat_readin.infile_num);
 
         free(cbd_fcode_mem);
-        munmap(mco_offset_index, comp_sz * sizeof(size_t));
-        munmap(mco_bin_index,comp_sz*ref_bin_num*sizeof(unsigned int) );
 
       }//components loop end
 
@@ -1216,21 +1210,25 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in)
       munmap(ctx_obj_ct + (size_t)b*num_cof_batch*mco_dstat_readin.infile_num,  maplength);
     } // batch loop end
     free(fco_pos);
+/*
     //=== distance output======//
-    /* global var iniital */
+    // global var iniital 
     ref_seq_num = mco_dstat_readin.infile_num ;
     qry_seq_num = co_dstat_readin.infile_num ;
     kmerlen = co_dstat_readin.kmerlen;
     dim_reduct_len = co_dstat_readin.dim_rd_len;
     char distf[PATHLEN];
     sprintf(distf, "%s/distance.out", distout_dir);
-
+*/
     fprintf(logfp,"distance output to : %s\n",distf);
     printf("distance output to : %s\n",distf);
 
 		dist_print_nobin(distout_dir,ref_seq_num, qry_seq_num, ref_ctx_ct_list, qry_ctx_ct_list,num_cof_batch,mcofname, cofname);
 
 	} // normal mode end
+	
+	free(mco_offset_index);
+  free(mco_bin_index);
 
   free(ref_ctx_ct_list);
   free(qry_ctx_ct_list);
@@ -1421,9 +1419,13 @@ void koc_dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsign
 
 			abundence_rowsum = 0;	
 			for(int rid = 0; rid < ref_num; rid++) 
-				abundence_rowsum += (double)ctx_obj_ct[ (b*num_cof_batch + qid) * ref_num + rid ].shared_koc_ct
-													 / ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct;					
-						
+				if(ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct > 0)
+					abundence_rowsum += (double)ctx_obj_ct[ (b*num_cof_batch + qid) * ref_num + rid ].shared_koc_ct
+													 / (double)ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct;					
+
+			//printf("shared_koc_ct=%lf\tshared_k_ct=%lf\t%lf\n",(double)ctx_obj_ct[ (b*num_cof_batch + qid) * ref_num + rid ].shared_koc_ct,(double)ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct,abundence_rowsum);		
+			
+
 			Y_size = qry_ctx_ct_list[b*num_cof_batch + qid];
       for(int rid = 0; rid < ref_num; rid++) {
 
@@ -1432,7 +1434,7 @@ void koc_dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsign
 				//XnY_size = ctx_obj_ct[ qid*ref_num + rid ].shared_k_ct; !!!bug found 20190425 
         XnY_size = ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct;
 				double abundence_pct = (double)ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_koc_ct 
-															/ XnY_size / abundence_rowsum ; 
+															/ XnY_size; // / abundence_rowsum ; 
 
         XuY_size =  X_size + Y_size - XnY_size ;
         X_XnY_size = X_size - XnY_size;

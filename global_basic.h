@@ -32,7 +32,7 @@
 #define MCO_BUF_S 4096 // buf size of reading/analysis mco 
 	//COMPONENT_SZ control .co file divided how many components 
 #define COMPONENT_SZ 6 //6 or 7,default unit component dimension size = 16^(COMPONENT_SZ) or 1<<4*(COMPONENT_SZ)
-#define CTX_SPC_USE_L 6 //8 //ctx space occupy rate limit = 1/(1<<CTX_SPC_USE_L)  
+#define CTX_SPC_USE_L 4 //8 //ctx space occupy rate limit = 1/(1<<CTX_SPC_USE_L)  
 #define CTX_DR_LMT 100 //limit for least CTX after dimensionality reduction
 #define LD_FCTR 0.6 //hash function load factor
 
@@ -49,6 +49,10 @@ typedef unsigned long long int llong;
 	
 	void log_printf(struct arg_global* g, int level, const char* fmt, ...);
 	#define ARGP_KEY_INVALID 16777219	
+
+
+//const char co_dstat[] = "cofiles.stat"; //stat file name in co dir
+//const char mco_dstat[] = "mcofiles.stat";
 
 //*****basic function prototypes ****/
 

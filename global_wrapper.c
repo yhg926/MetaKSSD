@@ -3,6 +3,7 @@
 #include "global_basic.h"
 #include "command_shuffle.h"
 #include "command_dist_wrapper.h" //#include "command_align_wrapper.h"
+#include "command_reverse.h"
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -37,6 +38,9 @@ static char doc_global[] =
       "  shuffle	shuffle subcontext space and set component block size.\n"
 "\n"
       "  dist   	bulid database and pairwise distance.\n"
+"\n"
+			"  reverse	reverse sketch to k-mer set.\n"
+
 "\v"
 ;
 
@@ -59,7 +63,9 @@ static error_t parse_global(int key, char* arg, struct argp_state* state)
 			else if(strcmp(arg, "dist") == 0) 
 			{				
 				cmd_dist(state); //cmd_align
-			}			
+			}
+			else if(strcmp(arg, "reverse") == 0)
+				cmd_reverse(state);			
 			else if(strcmp(arg, "primer") == 0)
 					for(int i = 8;i<52;i++ )
 				 		printf("%llu\n",find_lgst_primer_2pow(i));
