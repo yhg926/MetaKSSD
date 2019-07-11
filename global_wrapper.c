@@ -39,7 +39,7 @@ static char doc_global[] =
 "\n"
       "  dist   	bulid database and pairwise distance.\n"
 "\n"
-			"  reverse	reverse sketch to k-mer set.\n"
+			"  reverse	reverse kssd sketch to k-mer set.\n"
 
 "\v"
 ;
