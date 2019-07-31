@@ -31,21 +31,21 @@ struct arg_dist
 
 static struct argp_option opt_dist[] =
 {
-	{"halfKmerlength",'k',"INT",0, "set half Kmer length: 2-15[8]\v" },
-	{"threadN",'p',"INT",0,"set threads number[1]\v"},
-	{"list",'l',"file",0,"a file contain paths for all sequences\v"},
-	{"DimRdcLevel",'L',"INT",0,"Dimension Reduction level or provide .shuf file[2]\v"},
+	{"halfKmerlength",'k',"INT",0, "set half Kmer length: 2-15 [8]\v" },
+	{"threadN",'p',"INT",0,"set threads number [all threads]\v"},
+	{"list",'l',"file",0,"a file contain paths for all query sequences\v"},
+	{"DimRdcLevel",'L',"INT",0,"Dimension Reduction Level or provide .shuf file[2]\v"},
 	{"maxMemory",'m',"NUM",0,"maximal memory (in G) usage allowed\v"},
 	{"LstKmerOcrs",'n',"INT",0,"Specify the Least Kmer occurence in fastq file\v"},
 	{"quality",'Q',"INT",0,"Filter Kmer with lowest base quality < q (Phred)\v"},
 	{"reference_dir",'r',"<path>",0,"reference genome/database search against.\v"},
-//	{"distance",'d',0,0,"caculate pairwise distance.\v"},
+//{"distance",'d',0,0,"caculate pairwise distance.\v"},
 	{"outdir",'o',"<path>",0,"folder path for results files.\v" },
 	{"neighborN_max",'N',"INT",0,"max number of nearest reference genomes.[1]\v"},
 	{"mutDist_max",'D',"FLT",0,"max mutation allowed for distance output.[1]\v"},
 //{"abundance",'A',0,0,"abundance estimate mode.\v"},
-	{"keepcofile",888,0,0,"keep intermedia .co files.\v"},
-	{"stage2",999,0,0,"input is intermedia .co files.\v"},
+//{"keepcofile",888,0,0,"keep intermedia .co files.\v"},
+//{"stage2",999,0,0,"input is intermedia .co files.\v"},
   { 0 }
 };
 
