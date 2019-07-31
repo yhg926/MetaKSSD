@@ -73,8 +73,9 @@ int dist_dispatch(dist_opt_val_t *opt_val)
 				err(errno,"not a valid input files: make sure input files are .fas/.fq format" 
 					"or .co.num |.mco.num files with %s | %s in %s \n", co_dstat, mco_dstat, opt_val->refpath );
 
-			const char * dist_rslt_dir = mk_dist_rslt_dir(opt_val->outdir,"kssd_dist_rslt");
-      const char *dist_refco_dir = mk_dist_rslt_dir(dist_rslt_dir,"ref_co");
+			//const char *dist_rslt_dir = mk_dist_rslt_dir(opt_val->outdir,"kssd_dist_rslt");
+			const char *dist_rslt_dir = opt_val->outdir;
+      const char *dist_refco_dir = mk_dist_rslt_dir(dist_rslt_dir,"qry"); //"ref_co"
 
 			int *shuffled_refname_ind = shuffleN( ref_stat->infile_num, 0 );
 			mem_usage_stat.input_file_name_sz = ref_stat->infile_num * ( sizeof(llong) + PATHLEN*sizeof(char) );
@@ -142,7 +143,7 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 		if(opt_val->refpath[0] != '\0'){
 			const char *ref_db = test_get_fullpath(opt_val->refpath, mco_dstat);
 			
-			if(ref_db==NULL) err(errno,"need speficy the mco path for -r to run the query-ref search model");
+			if(ref_db==NULL) err(errno,"need speficy the ref-sketch path for -r to run the query-ref search model");
 			FILE * ref_mco_stat_fp;
 		  if ((ref_mco_stat_fp = fopen(ref_db,"rb")) == NULL) err(errno,"mco stat file:%s",ref_db );
 			mco_dstat_t mco_ref_dstat;
@@ -195,8 +196,9 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 				// if is valid raw seq format		
         if(is_valid_fas_fq_in){ //convert .fas .fq to co
 
-      		const char * dist_rslt_dir = mk_dist_rslt_dir(opt_val->outdir,"kssd_dist_rslt");
-      		const char *dist_co_dir = mk_dist_rslt_dir(dist_rslt_dir,"co");
+      		//const char * dist_rslt_dir = mk_dist_rslt_dir(opt_val->outdir,"kssd_dist_rslt"); 
+					const char * dist_rslt_dir = opt_val->outdir;
+      		const char *dist_co_dir = mk_dist_rslt_dir(dist_rslt_dir,"qry"); // "co"
 					
 					int *shuffled_refname_ind = shuffleN( infile_stat->infile_num, 0 );
 					mem_usage_stat.input_file_name_sz = infile_stat->infile_num * ( sizeof(llong) + PATHLEN*sizeof(char) );
@@ -509,7 +511,7 @@ void run_stageII(const char * co_dstat_fpath, int p_fit_mem)
 		  const char* dist_co_dir = get_pathname(co_dstat_fpath,co_dstat);
 		  const char* dist_rslt_dir = malloc(PATHLEN*sizeof(char));		
 			sprintf((char*)dist_rslt_dir,"%s/..",dist_co_dir);
-      const char* dist_mco_dir = mk_dist_rslt_dir(dist_rslt_dir,"mco");
+      const char* dist_mco_dir = mk_dist_rslt_dir(dist_rslt_dir,"ref"); //"mco"
       const char* mco_dstat_fpath = malloc(PATHLEN*sizeof(char));
 			sprintf((char*)mco_dstat_fpath,"%s/%s",dist_mco_dir,mco_dstat);			
 

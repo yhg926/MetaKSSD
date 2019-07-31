@@ -385,7 +385,7 @@ llong find_lgst_primer_2pow(int w)
  	llong n = ( 1llu << w ) ; //memory limit for possible subcontext space
 	llong hshsz = (llong) ( n * CTX_SPC_USE_L / LD_FCTR) ; 
 	printf("w=%d\tspace_sz=%llu\thashsize=%llu\tkmerlimt=%llu\n",w,n,hshsz,(llong)(hshsz*LD_FCTR) ) ; 
-	llong i = 3, c ; llong prime;
+	llong i = 3, c ; llong prime = 0;
 	for(i = n - 1 ; i > (n >> 1) ; i--) 
 	{
 		for ( c = 2  ; c <= (int)pow(i+1,0.5) ; c++ )

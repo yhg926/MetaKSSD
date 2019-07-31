@@ -37,13 +37,13 @@ static struct argp_option opt_dist[] =
 	{"DimRdcLevel",'L',"INT",0,"Dimension Reduction level or provide .shuf file[2]\v"},
 	{"maxMemory",'m',"NUM",0,"maximal memory (in G) usage allowed\v"},
 	{"LstKmerOcrs",'n',"INT",0,"Specify the Least Kmer occurence in fastq file\v"},
-	{"quality",'q',"INT",0,"Filter Kmer with lowest base quality < q (Phred)\v"},
+	{"quality",'Q',"INT",0,"Filter Kmer with lowest base quality < q (Phred)\v"},
 	{"reference_dir",'r',"<path>",0,"reference genome/database search against.\v"},
-	{"distance",'d',0,0,"caculate pairwise distance.\v"},
+//	{"distance",'d',0,0,"caculate pairwise distance.\v"},
 	{"outdir",'o',"<path>",0,"folder path for results files.\v" },
 	{"neighborN_max",'N',"INT",0,"max number of nearest reference genomes.[1]\v"},
 	{"mutDist_max",'D',"FLT",0,"max mutation allowed for distance output.[1]\v"},
-	{"abundance",'A',0,0,"abundance estimate mode.\v"},
+//{"abundance",'A',0,0,"abundance estimate mode.\v"},
 	{"keepcofile",888,0,0,"keep intermedia .co files.\v"},
 	{"stage2",999,0,0,"input is intermedia .co files.\v"},
   { 0 }
@@ -162,7 +162,7 @@ static error_t parse_dist(int key, char* arg, struct argp_state* state) {
 			else dist_opt_val.kmerocrs = atoi(arg);
 		}
 			break;
-		case 'q':
+		case 'Q':
 		{
 			dist_opt_val.kmerqlty = atoi(arg);
 		}	
