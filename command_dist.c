@@ -1583,7 +1583,7 @@ void dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsigned i
 		munmap(ctx_obj_ct + (size_t)b*num_cof_batch*ref_num, maplength);
 	}// batchs loop end
 	fclose(distfp);
-
+	remove(full_distfcode);
 }
 
 
