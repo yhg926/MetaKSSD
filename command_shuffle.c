@@ -23,7 +23,7 @@ static struct argp_option opt_shuffle[] =
 {
 //	{ 0,0,0,0,"functional option for aa:\v", 1 },
 //  { "genomeSize", 'g', "K/M/G/T",0,"Genome size scale ( with K/M/G). K for single or few genes, M for prokayote genome, G for mammals genome. If specified, will be used for determing context length.[M]\v", 1},
-  {"halfKmerLen",'k', "INT",  0, "a half of the length of k-mer. For proyakat genome, k=8 is suggested, for mammals, -g=G, 10 or 11 is suggested.[8]\v" },
+  {"halfKmerLen",'k', "INT",  0, "a half of the length of k-mer. For proyakat genome, k = 8 is suggested; for mammals, k = 10 or 11 is suggested.[8]\v" },
 	{"halfSubstrLen",'s',"INT", 0,"a half of the length of k-mer substring. [5]\v" },
 	{"level",'l',"INT", 0, "the level of dimensionality reduction, the expectation dimensionality reduction rate is 16^n if set -l = n. [2]\v",7},
 	{"outfile",'o',"STRING",0,"specify the output file name prefix, if not specify default shuffle named 'default.shuf generated'\v"},
