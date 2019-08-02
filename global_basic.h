@@ -34,7 +34,11 @@
 #ifndef COMPONENT_SZ
 #define COMPONENT_SZ 7 //6 or 7,default unit component dimension size = 16^(COMPONENT_SZ) or 1<<4*(COMPONENT_SZ)
 #endif
+
+#ifndef CTX_SPC_USE_L
 #define CTX_SPC_USE_L 4 //8 //ctx space occupy rate limit = 1/(1<<CTX_SPC_USE_L)  
+#endif
+
 #define CTX_DR_LMT 100 //limit for least CTX after dimensionality reduction
 #define LD_FCTR 0.6 //hash function load factor
 
