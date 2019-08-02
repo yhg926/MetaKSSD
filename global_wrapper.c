@@ -41,7 +41,7 @@ static char doc_global[] =
 "\n"
 			"  reverse	reverse kssd sketch to k-mer set.\n"
 
-"\v"
+"\n"
 ;
 
 
@@ -76,12 +76,12 @@ static error_t parse_global(int key, char* arg, struct argp_state* state)
   else if(key == ARGP_KEY_NO_ARGS){
         state->name = long_domain;
 				printf("\n%s\n\n",argp_program_version);
+				printf("Unit_space_size = %d\n\n", COMPONENT_SZ);
 				printf("Type 'kssd --licence' for license and copyright information.\n\n");
         argp_state_help(state,stdout,ARGP_HELP_SHORT_USAGE);
         printf("\v");
         argp_state_help(state,stdout,ARGP_HELP_POST_DOC);
-				printf("Unit_space_size = %d\n", COMPONENT_SZ);
-				printf("\v");
+				//printf("\v");
         return EINVAL;
   }
   else if(key == ARGP_KEY_INVALID){
