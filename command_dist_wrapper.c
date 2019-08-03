@@ -239,7 +239,7 @@ static struct argp argp_dist =
 {
   opt_dist,
   parse_dist,
-  "[<query>]",
+  "[-r <refernce>] [<query>]",
   doc_dist
 };
 
