@@ -333,8 +333,9 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 {
 	llong **CO = malloc( p_fit_mem * sizeof(llong *) );
 
-  for(int i = 0; i< p_fit_mem; i++ )
+  for(int i = 0; i< p_fit_mem; i++ ){
   	CO[i] = (llong *)malloc(hashsize * sizeof(llong) );
+	}
 
 	llong all_ctx_ct = 0 ;
 	ctx_obj_ct_t *ctx_ct_list = malloc(sizeof(ctx_obj_ct_t) * seqfile_stat->infile_num);
@@ -1301,7 +1302,7 @@ void dist_print( const char *distf, FILE *dist_fp )
 	check ( ctx_obj_ct == MAP_FAILED, "mmap %s failed: %s", distf, strerror (errno));
 
   fprintf(dist_fp,"output %s\n",distf);
-	for(int i = 0;i < s.st_size/sizeof(ctx_obj_ct_t); i++)
+	//for(llong i = 0;i < s.st_size/sizeof(ctx_obj_ct_t); i++) // bug found: int i -> llong i
 	//	fprintf(dist_fp,"%s\t%d\t%d\t%d\t%f\n",distf,i,ctx_obj_ct[i],(double)ctx_obj_ct[i][1]/ctx_obj_ct[i][0]);	
 	close(fd);
 	munmap(ctx_obj_ct, s.st_size);
@@ -1331,12 +1332,12 @@ void fname_dist_print(int ref_bin_code, int qry_fcode, const char *distout_dir, 
 	int Min_XY_size, X_size, Y_size, XnY_size, XuY_size, X_XnY_size, Y_XnY_size ;
 	int alp_size = 4; // dna 	
 
-	for(int i = 0;i < s.st_size/sizeof(ctx_obj_ct_t); i++) {
+	for(llong i = 0;i < s.st_size/sizeof(ctx_obj_ct_t); i++) {
 
 		X_size = ref_ctx_ct_list[ref_bin_code*BIN_SZ + i];
 		Y_size = qry_ctx_ct_list[qry_fcode];
 		Min_XY_size = X_size < Y_size ? X_size : Y_size ;
-		XnY_size = ctx_obj_ct[i];
+		XnY_size = ctx_obj_ct[i]; //ctx_obj_ct[i], bug:190809 index of ctx_obj_ct should be llong
 		XuY_size =  X_size + Y_size - XnY_size ;
 		X_XnY_size = X_size - XnY_size;
 		Y_XnY_size = Y_size- XnY_size;		
@@ -1422,11 +1423,11 @@ void koc_dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsign
 
 			abundence_rowsum = 0;	
 			for(int rid = 0; rid < ref_num; rid++) 
-				if(ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct > 0)
-					abundence_rowsum += (double)ctx_obj_ct[ (b*num_cof_batch + qid) * ref_num + rid ].shared_koc_ct
-													 / (double)ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct;					
+				if(ctx_obj_ct[ ((llong)b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct > 0)
+					abundence_rowsum += (double)ctx_obj_ct[ ((llong)b*num_cof_batch + qid) * ref_num + rid ].shared_koc_ct
+													 / (double)ctx_obj_ct[ ((llong)b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct;					
 
-			//printf("shared_koc_ct=%lf\tshared_k_ct=%lf\t%lf\n",(double)ctx_obj_ct[ (b*num_cof_batch + qid) * ref_num + rid ].shared_koc_ct,(double)ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct,abundence_rowsum);		
+			//printf("shared_koc_ct=%lf\tshared_k_ct=%lf\t%lf\n",(double)ctx_obj_ct[ ((llong)b*num_cof_batch + qid) * ref_num + rid ].shared_koc_ct,(double)ctx_obj_ct[ ((llong)b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct,abundence_rowsum);		
 			
 
 			Y_size = qry_ctx_ct_list[b*num_cof_batch + qid];
@@ -1434,9 +1435,9 @@ void koc_dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsign
 
         X_size = ref_ctx_ct_list[rid];
         Min_XY_size = X_size < Y_size ? X_size : Y_size ;
-				//XnY_size = ctx_obj_ct[ qid*ref_num + rid ].shared_k_ct; !!!bug found 20190425 
-        XnY_size = ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct;
-				double abundence_pct = (double)ctx_obj_ct[ (b*num_cof_batch + qid)*ref_num + rid ].shared_koc_ct 
+				//XnY_size = ctx_obj_ct[ (llong)qid*ref_num + rid ].shared_k_ct; !!!bug found 20190425 
+        XnY_size = ctx_obj_ct[ ((llong)b*num_cof_batch + qid)*ref_num + rid ].shared_k_ct;
+				double abundence_pct = (double)ctx_obj_ct[ ((llong)b*num_cof_batch + qid)*ref_num + rid ].shared_koc_ct 
 															/ XnY_size; // / abundence_rowsum ; 
 
         XuY_size =  X_size + Y_size - XnY_size ;
@@ -1539,7 +1540,7 @@ void dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsigned i
     		X_size = ref_ctx_ct_list[rid];
 
     		Min_XY_size = X_size < Y_size ? X_size : Y_size ;
-   			XnY_size = ctx_obj_ct[(b*num_cof_batch + qid)*ref_num + rid ]; // fixed bug?: ctx_obj_ct[ qid*ref_num + rid ];
+   			XnY_size = ctx_obj_ct[((llong)b*num_cof_batch + qid)*ref_num + rid ]; // fixed bug?: ctx_obj_ct[ qid*ref_num + rid ];
     		XuY_size =  X_size + Y_size - XnY_size ;
 	    	X_XnY_size = X_size - XnY_size;
   	  	Y_XnY_size = Y_size- XnY_size;
