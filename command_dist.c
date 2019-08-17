@@ -181,8 +181,15 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 
 		// if only .co query 
 		else if( qryco_dstat_fpath != NULL) { // convert .co folder opt_val->remaining_args[0]  to .mco
+			if( opt_val->num_remaining_args == 1 ){
+      	run_stageII(qryco_dstat_fpath, opt_val->p);
+			}
+			else if (opt_val->num_remaining_args > 1){ //20190813: combined multiple batches qry/ to a single qry/ 
+				combine_queries(opt_val);
+				//printf("al queries combined as %s",);
+			}
 
-      run_stageII(qryco_dstat_fpath, opt_val->p);
+
     }
 		else if ( (qrymco_dstat_fpath != NULL) && (opt_val->num_remaining_args > 1 )){
 			//run .mco combine mode
@@ -467,7 +474,8 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
         remove(cofname);
       }
       fclose(com_cofp);
-
+			
+			free(tmpco);
       fwrite(cof_index_in_cbdco,sizeof(size_t), seqfile_stat->infile_num + 1, indexfp);
       fclose(indexfp);
       free(cof_index_in_cbdco);
@@ -1557,8 +1565,8 @@ void dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsigned i
 
 	    	j_prim = ((double)XnY_size - rs) / XuY_size ;
   	  	c_prim = ((double)XnY_size - rs) / Min_XY_size ;
-//    		Dm_prim = j_prim == 1? 0:-log(2*j_prim/(1+j_prim)) / kmerlen ;
- //   		Da_prim = c_prim==1? 0:-log(c_prim) / kmerlen ;
+//   		Dm_prim = j_prim == 1? 0:-log(2*j_prim/(1+j_prim)) / kmerlen ;
+//   		Da_prim = c_prim==1? 0:-log(c_prim) / kmerlen ;
 
     		sd_j_prim = pow(j_prim*(1 - j_prim) / XuY_size, 0.5) ;
     		sd_c_prim = pow(c_prim*(1 - c_prim) / Min_XY_size,0.5) ;
@@ -1581,13 +1589,13 @@ void dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsigned i
           contain_ind,Da,CI95_j_prim1,CI95_j_prim2,CI95_Dm_prim1,CI95_Dm_prim2,CI95_c_prim1,
           CI95_c_prim2,CI95_Da_prim1,CI95_Da_prim2,pv_j_prim,pv_c_prim,qv_j_prim,qv_c_prim);
 	
-/*
+
   			//  if(Dm_prim < mutdistance_thre)
-    		fprintf(distfp,"%s\t%s\t%u-%u|%u|%u\t%lf\t%lf\t%lf\t%lf\t%lf[%lf,%lf]\t%lf[%lf,%lf]\t%lf[%lf,%lf]\t%lf[%lf,%lf]\t%E\t%E\t%E\t%E\n", 
-					qryfname[b*num_cof_batch + qid],refname[rid],XnY_size,(unsigned int)rs,X_size,Y_size,jac_ind,Dm,
-        	contain_ind,Da,j_prim,CI95_j_prim1,CI95_j_prim2,Dm_prim,CI95_Dm_prim1,CI95_Dm_prim2,c_prim,CI95_c_prim1,
-        	CI95_c_prim2,Da_prim,CI95_Da_prim1,CI95_Da_prim2,pv_j_prim,pv_c_prim,qv_j_prim,qv_c_prim);
-*/
+    //		fprintf(distfp,"%s\t%s\t%u-%u|%u|%u\t%lf\t%lf\t%lf\t%lf\t%lf[%lf,%lf]\t%lf[%lf,%lf]\t%lf[%lf,%lf]\t%lf[%lf,%lf]\t%E\t%E\t%E\t%E\n", 
+			//		qryfname[b*num_cof_batch + qid],refname[rid],XnY_size,(unsigned int)rs,X_size,Y_size,jac_ind,Dm,
+        //	contain_ind,Da,j_prim,CI95_j_prim1,CI95_j_prim2,Dm_prim,CI95_Dm_prim1,CI95_Dm_prim2,c_prim,CI95_c_prim1,
+        	//CI95_c_prim2,Da_prim,CI95_Da_prim1,CI95_Da_prim2,pv_j_prim,pv_c_prim,qv_j_prim,qv_c_prim);
+
   		}//refmco row loop
 		}// qry loop in one batch
 
@@ -1634,6 +1642,213 @@ infile_tab_t* dist_organize_refpath( dist_opt_val_t *opt_val){
 	else
 		return NULL;		
 }
+
+const char * combine_queries(dist_opt_val_t *opt_val)
+{
+	// might need adjust by memory limitation later
+	int p_fit_mem = opt_val->p;
+	const char* co_dir = opt_val->outdir; 
+	const char kmerct_list_fname[] = "tmp_kmerct_list";
+	const char fname_fname[] = "tmp_infiles_fname";
+	if(opt_val->abundance){err(errno,"combine_queries(): abundance model not supported yet");}
+	FILE *co_stat_fp;
+	const char *qryco_dstat_fpath = NULL;
+	qryco_dstat_fpath = test_get_fullpath(opt_val->remaining_args[0], co_dstat);
+	if( ( co_stat_fp = fopen(qryco_dstat_fpath,"rb")) == NULL ){
+		err(errno,"combine_queries():%s", qryco_dstat_fpath);
+	}
+	//initialize statf with remaining_args[0];
+	//co_dstat file part 1: status
+	co_dstat_t co_dstat_one, co_dstat_it;
+	fread(&co_dstat_one, sizeof(co_dstat_t), 1, co_stat_fp);
+	if (co_dstat_one.koc) { err(errno,"combine_queries(): abundance model not supported yet"); }		
+	
+	//co_dstat file part 2: ctx_ct_list
+	char one_kmerct_list_name[PATHLEN];
+	sprintf(one_kmerct_list_name,"%s/%s",co_dir,kmerct_list_fname);
+	FILE *kmerct_list_fp;
+	if( (kmerct_list_fp = fopen(one_kmerct_list_name,"wb") ) == NULL ) {err(errno,"%s",one_kmerct_list_name);}
+	ctx_obj_ct_t * tmp_ct_list = malloc(sizeof(ctx_obj_ct_t) * co_dstat_one.infile_num);
+	fread(tmp_ct_list,sizeof(ctx_obj_ct_t),co_dstat_one.infile_num,co_stat_fp);
+	fwrite(tmp_ct_list,sizeof(ctx_obj_ct_t),co_dstat_one.infile_num,kmerct_list_fp);
+	//co_dstat file part 3: infiles_fname
+	char one_infilename_name[PATHLEN];
+	sprintf(one_infilename_name,"%s/%s",co_dir,fname_fname);
+	FILE *infilename_name_fp;
+	if( ( infilename_name_fp = fopen(one_infilename_name,"wb")  ) == NULL  ){err(errno,"%s", one_infilename_name);}
+	char (*tmpname)[PATHLEN] = malloc(PATHLEN * co_dstat_one.infile_num);
+	fread(tmpname,PATHLEN,co_dstat_one.infile_num,co_stat_fp);
+	fwrite(tmpname,PATHLEN,co_dstat_one.infile_num,infilename_name_fp);
+
+	fclose(co_stat_fp);
+	// create/open sketches and index filehandle and initialized with remaining_args[0] content for each component
+	FILE** com_cofp = malloc( sizeof(FILE*) * co_dstat_one.comp_num);
+  FILE** indexfp = malloc( sizeof(FILE*) * co_dstat_one.comp_num);
+	size_t *index_offset = malloc(sizeof(size_t) * co_dstat_one.comp_num);	
+#pragma omp parallel for num_threads(p_fit_mem) schedule(guided)
+	for(int c = 0; c < co_dstat_one.comp_num; c++) {
+
+		struct stat file_stat;
+		//sketches output file
+		char combined_cof[PATHLEN];
+		sprintf(combined_cof,"%s/combco.%d",co_dir,c);
+		if( (com_cofp[c] = fopen(combined_cof,"wb")) == NULL) err(errno,"%s",combined_cof);
+		//sketches initialize with first input file
+		sprintf(combined_cof,"%s/combco.%d",opt_val->remaining_args[0],c);
+		stat(combined_cof, &file_stat);
+		unsigned int *tmp_combco = malloc(file_stat.st_size);
+		FILE *com_cofp_it;
+		if( (com_cofp_it = fopen(combined_cof,"rb")) == NULL) err(errno,"%s",combined_cof);
+				
+		fread(tmp_combco, file_stat.st_size, 1, com_cofp_it);
+    fwrite(tmp_combco, file_stat.st_size, 1, com_cofp[c]);
+
+    fclose(com_cofp_it);
+    free(tmp_combco);
+		
+		//index output file
+		char indexfname[PATHLEN];
+		sprintf(indexfname,"%s/combco.index.%d",co_dir,c);
+    if( (indexfp[c] = fopen(indexfname,"wb")) == NULL) err(errno,"%s",indexfname);
+
+		//index initialize with first input file
+		sprintf(indexfname, "%s/combco.index.%d", opt_val->remaining_args[0], c);
+		stat(indexfname, &file_stat);
+		size_t *tmp_index_combco = malloc(file_stat.st_size);
+		FILE *com_indexfp_it;
+		if((com_indexfp_it = fopen(indexfname,"rb") ) == NULL) err(errno,"%s",indexfname);		
+
+		fread(tmp_index_combco,file_stat.st_size, 1,com_indexfp_it);
+		fwrite(tmp_index_combco,file_stat.st_size, 1,indexfp[c]);
+
+		index_offset[c] = tmp_index_combco[file_stat.st_size/sizeof(size_t) - 1] ;
+		fclose(com_indexfp_it);
+		free(tmp_index_combco);
+	}	
+
+	for (int i = 1; i< opt_val->num_remaining_args; i++){ //for (int i = 1; ...
+
+		qryco_dstat_fpath = test_get_fullpath(opt_val->remaining_args[i],co_dstat);
+		if(qryco_dstat_fpath == NULL){
+    	printf("%dth query %s is not a valid query: no %s file\n", i, opt_val->remaining_args[i], co_dstat);
+     	continue;
+    }
+		else if( ( co_stat_fp = fopen(qryco_dstat_fpath,"rb")) == NULL ){
+    	printf("combine_queries(): %dth query can not open %s\n", i, qryco_dstat_fpath);
+			continue;
+  	}
+				
+		fread(&co_dstat_it, sizeof(co_dstat_t), 1, co_stat_fp);
+		//make sure all queris database used the same kmer substring space
+    // need make sure the same component sizes?
+		// suppose all other parameter is same if the shuf_id is the same 
+		if(co_dstat_one.shuf_id != co_dstat_it.shuf_id){
+      printf("combine_queries(): %dth shuf_id: %u not match 0th shuf_id: %u\n",i, co_dstat_it.shuf_id, co_dstat_one.shuf_id);
+      fclose(co_stat_fp);
+      continue;
+    }
+		else if (co_dstat_it.koc){ 
+			printf("combine_queries(): %dth query abundance model not supported yet \n", i); 
+      fclose(co_stat_fp);
+      continue;
+		}		
+    // ctx_ct_list[i]: all kmer count for ith file, summed over all components
+    //all_ctx_ct or co_dstat_it.all_ctx_ct : all kmer count summed over all components, all files in one batch
+    //co_dstat_one.all_ctx_ct : all kmer count summed over all components, all files, all batches
+    co_dstat_one.all_ctx_ct += co_dstat_it.all_ctx_ct;
+    co_dstat_one.infile_num += co_dstat_it.infile_num;
+		tmp_ct_list = realloc(tmp_ct_list, sizeof(ctx_obj_ct_t) * co_dstat_it.infile_num);
+		fread(tmp_ct_list,sizeof(ctx_obj_ct_t),co_dstat_it.infile_num,co_stat_fp);
+		fwrite(tmp_ct_list,sizeof(ctx_obj_ct_t),co_dstat_it.infile_num,kmerct_list_fp);
+		
+		tmpname = realloc(tmpname, PATHLEN * co_dstat_it.infile_num ) ;
+		fread(tmpname,PATHLEN,co_dstat_it.infile_num,co_stat_fp);
+		fwrite(tmpname,PATHLEN,co_dstat_it.infile_num,infilename_name_fp);
+
+    fclose(co_stat_fp);
+
+#pragma omp parallel for num_threads(p_fit_mem) schedule(guided)
+		for(int c = 0; c < co_dstat_one.comp_num; c++) {
+			// merge combco.c		
+			char combined_cof_it[PATHLEN];						
+			FILE *com_cofp_it;	
+			struct stat file_stat;
+			sprintf(combined_cof_it,"%s/combco.%d",opt_val->remaining_args[i],c);
+			stat(combined_cof_it,&file_stat);
+			//int tmpkmerct = comb_cof_stat_it.st_size/sizeof(unsigned int);
+			unsigned int *tmpco = malloc(file_stat.st_size);
+
+      if( (com_cofp_it = fopen(combined_cof_it,"rb")) == NULL) err(errno,"%s",combined_cof_it);
+			fread(tmpco,file_stat.st_size, 1, com_cofp_it);
+			fwrite(tmpco,file_stat.st_size, 1, com_cofp[c]);
+			
+			fclose(com_cofp_it);
+			free(tmpco);
+			
+			// merge index
+			char indexfname_it[PATHLEN];	
+			sprintf(indexfname_it,"%s/combco.index.%d",opt_val->remaining_args[i],c);
+			stat(indexfname_it, &file_stat);
+			size_t * tmpindex = malloc(file_stat.st_size);
+			FILE *indexfp_it;			
+			if( (indexfp_it = fopen(indexfname_it,"rb")) == NULL) err(errno,"%s",indexfname_it);
+			fread(tmpindex,file_stat.st_size, 1,indexfp_it);
+			fclose(indexfp_it);
+
+			int tmp_infile_num = file_stat.st_size/sizeof(size_t);
+			for(int i=1; i< tmp_infile_num; i++ ) { tmpindex[i] += index_offset[c];}
+			fwrite( tmpindex + 1, sizeof(size_t), tmp_infile_num - 1, indexfp[c]);
+			index_offset[c] = tmpindex[tmp_infile_num-1]; 				
+		} 		
+	}// all batches loop end
+	
+	fclose(kmerct_list_fp);
+	fclose(infilename_name_fp);	
+// close file handles for each components
+#pragma omp parallel for num_threads(p_fit_mem) schedule(guided)
+  for(int c = 0; c < co_dstat_one.comp_num; c++) {
+		fclose(com_cofp[c]);
+		fclose(indexfp[c]);
+	}
+	
+	//write out
+	FILE *one_co_stat_fp;
+	char one_stat_name[PATHLEN];	
+	sprintf(one_stat_name,"%s/%s",co_dir,co_dstat);
+	if( (one_co_stat_fp = fopen(one_stat_name,"wb")) == NULL) { err(errno,"%s",one_stat_name) ;};
+
+	//write summary dstat
+	fwrite(&co_dstat_one,sizeof(co_dstat_t),1,one_co_stat_fp);
+	//write kmercout_list dstat
+	struct stat file_stat;
+	stat(one_kmerct_list_name, &file_stat);
+	tmp_ct_list = realloc(tmp_ct_list, file_stat.st_size);	
+	if( (kmerct_list_fp = fopen(one_kmerct_list_name,"rb") ) == NULL ) {err(errno,"%s",one_kmerct_list_name);}	
+	fread(tmp_ct_list,file_stat.st_size,1,kmerct_list_fp);
+	fwrite(tmp_ct_list,file_stat.st_size,1,one_co_stat_fp);
+	//write fnames dstat
+	stat(one_infilename_name,&file_stat);
+	tmpname = realloc(tmpname,file_stat.st_size);
+	if( (infilename_name_fp = fopen(one_infilename_name,"rb")  ) == NULL  ){err(errno,"%s", one_infilename_name);}
+	fread(tmpname,file_stat.st_size,1,infilename_name_fp);
+	fwrite(tmpname,file_stat.st_size,1,one_co_stat_fp);
+
+	fclose(one_co_stat_fp);
+	//clean
+	remove(one_kmerct_list_name);
+	remove(one_infilename_name);
+	free(tmp_ct_list);
+	free(tmpname);
+	free(com_cofp);
+  free(indexfp);
+
+	return co_dir;
+}
+
+
+
+
+
 
 
 
