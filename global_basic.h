@@ -107,8 +107,8 @@ typedef struct bin_stat	{
 } bin_stat_t;
 
 
-infile_tab_t * organize_infile_list(char* list_path);
-infile_tab_t * organize_infile_frm_arg (int num_remaining_args, char ** remaining_args);
+infile_tab_t * organize_infile_list(char* list_path,int fmt_ck);
+infile_tab_t * organize_infile_frm_arg (int num_remaining_args, char ** remaining_args,int fmt_ck);
 //per bin get file basename and estimate .co files (before dimension reduction) memory usage.
 bin_stat_t * get_bin_basename_stat(infile_entry_t* organized_infile_tab, int *shuffle_arr,int binsz);
 

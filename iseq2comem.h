@@ -10,9 +10,9 @@ extern void seq2co_global_var_initial(void);
 
 //llong * bgzfasta2co(char* seqfname,char seqin_buff[READSEQ_BUFFSZ], llong *co);
 llong * mmpfasta2co(char* seqfname, llong *co);
-llong * fasta2co(char* seqfname,llong *co);
-llong * fastq2co(char* seqfname, llong *co, int Q, int M );
-llong * fastq2koc (char* seqfname, llong *co, int Q);
+llong * fasta2co(char* seqfname,llong *co,char * pipecmd);
+llong * fastq2co(char* seqfname, llong *co, char * pipecmd,int Q, int M );
+llong * fastq2koc (char* seqfname, llong *co, char * pipecmd, int Q);
 
 llong write_fqco2file(char* cofilename, llong *co);
 llong wrt_co2cmpn_use_inn_subctx(char* cofilename, llong *co);

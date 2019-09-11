@@ -27,6 +27,7 @@ typedef struct dist_opt_val
 	int num_neigb; // distance output filter: num of nearest neight 
 	double mut_dist_max;// distance output filter: maximun allow mutation distance
 	bool abundance;
+	char pipecmd[PATHLEN]; //pipe command
   int num_remaining_args;
   char **remaining_args;
   //char outp[128]= "./";

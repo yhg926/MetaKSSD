@@ -44,7 +44,8 @@ static struct argp_option opt_dist[] =
 	{"neighborN_max",'N',"INT",0,"max number of nearest reference genomes.[1]\v"},
 	{"mutDist_max",'D',"FLT",0,"max mutation allowed for distance output.[1]\v"},
 //{"abundance",'A',0,0,"abundance estimate mode.\v"},
-//{"keepcofile",888,0,0,"keep intermedia .co files.\v"},
+	{"keepcofile",888,0,0,"keep intermedia .co files.\v"},
+	{"pipecmd",'P',"<cmd>",0,"pipe command.\v"},
 //{"stage2",999,0,0,"input is intermedia .co files.\v"},
   { 0 }
 };
@@ -74,6 +75,7 @@ false, // input is intermeida .co folder
 1, //neighborN_max
 1, //mutDist_max
 false, // no abundance
+"", // no pipe command 
 0, //int num_remaining_args; no option arguments num. 
 NULL //char **remaining_args; no option arguments array.
 } ;
@@ -190,6 +192,15 @@ static error_t parse_dist(int key, char* arg, struct argp_state* state) {
 		{
 			dist_opt_val.abundance = true;
 			break;
+		}
+		case 'P':
+		{
+			if(strlen(arg) > PATHLEN) {
+        err(errno,"the piped command should not longer than %d", PATHLEN);
+        exit(EXIT_FAILURE);
+      };
+      strcpy(dist_opt_val.pipecmd,arg);
+      break;
 		}
 		case 888:
 		{

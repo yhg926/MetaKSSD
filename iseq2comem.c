@@ -1,4 +1,5 @@
 #include "iseq2comem.h"
+
 #include "command_dist.h"
 #include "global_basic.h"
 #include <stdbool.h>
@@ -82,7 +83,7 @@ void seq2co_global_var_initial(void)
 
 const char gzpipe_cmd[]= "zcat -fc"; //const char gzpipe_cmd[]= "unpigz -fc";
 
-llong * fasta2co(char* seqfname, llong *co)
+llong * fasta2co(char* seqfname, llong *co, char * pipecmd) //20190910, enhancement: pipecmd 
 {
 	llong tuple = 0LLU, crvstuple = 0LLU,
     unituple, drtuple, pfilter;
@@ -91,7 +92,11 @@ llong * fasta2co(char* seqfname, llong *co)
 	char seqin_buff[ READSEQ_BUFFSZ + 1 ]; // seq infile buffer
 	FILE *infp;
 	char fas_fname[PATHLEN];
-	sprintf(fas_fname,"%s %s",gzpipe_cmd,seqfname);
+	if(pipecmd[0] != '\0')
+		sprintf(fas_fname,"%s %s",pipecmd,seqfname);//other pipecmd except decompress cmd
+	else
+		sprintf(fas_fname,"%s %s",gzpipe_cmd,seqfname);
+
 	if( (infp=popen(fas_fname,"r")) == NULL ) err(errno,"fasta2co():%s",fas_fname);
 
 	int newLen =  fread(seqin_buff, sizeof(char),READSEQ_BUFFSZ,infp);
@@ -183,7 +188,7 @@ llong * fasta2co(char* seqfname, llong *co)
 #define CT_BIT 4 //bits for Kmer count
 #define CT_MAX 0xfLLU //make sure smaller than 1LLU<<CT_BTI
 
-llong * fastq2co(char* seqfname, llong *co, int Q, int M )
+llong * fastq2co(char* seqfname, llong *co, char *pipecmd, int Q, int M ) //20190910 enhanced pipecmd
 {
 	if(M >= CT_MAX) err(errno,"fastq2co(): Occurence num should smaller than %d", (int)CT_MAX);
 
@@ -192,9 +197,12 @@ llong * fastq2co(char* seqfname, llong *co, int Q, int M )
 
 	FILE *infp;
 	char fq_fname[PATHLEN];
-	sprintf(fq_fname,"%s %s",gzpipe_cmd,seqfname);
+	if(pipecmd[0] != '\0')
+    sprintf(fq_fname,"%s %s",pipecmd,seqfname);//other pipecmd except decompress cmd
+  else
+    sprintf(fq_fname,"%s %s",gzpipe_cmd,seqfname);
+
 	if( (infp=popen(fq_fname,"r")) == NULL ) err(errno,"fastq2co():%s",fq_fname);
-	
 	char seq[LEN];
 	char qual[LEN];
 
@@ -206,7 +214,8 @@ llong * fastq2co(char* seqfname, llong *co, int Q, int M )
 	for(int pos = 0; pos < strlen(seq); pos++){
 		if(seq[pos] == '\n' ){
 			fgets(seq,LEN,infp); fgets(seq,LEN,infp);
-			fgets(qual,LEN,infp); fgets(qual,LEN,infp); 
+			fgets(qual,LEN,infp); fgets(qual,LEN,infp);
+//			printf("seq=%s\nqual=%s\n==\n",seq,qual); 
 			line_num+=4;
 			if( !feof(infp) ) {
 				base = 1; 
@@ -228,13 +237,13 @@ llong * fastq2co(char* seqfname, llong *co, int Q, int M )
 			//	if (qual[pos] < Q)
 			//		warnx("in file %s line %d skip low quality charactor '%c[%c]'\n",seqfname, line_num+2 ,ch,qual[pos]);
 		 //	else warnx("in file %s line %d ignorn illegal charactor '%c'\n",seqfname,line_num+2,ch);
-
 				base = 1;
 				continue;
 			};
 		};
 	
 		if( base > TL ){ // serious bug ?!!!:  if( base >= TL ) 
+
 			unituple = tuple < crvstuple ? tuple:crvstuple;
 			int dim_tup = ((unituple & domask) >> ( (half_outctx_len)*2 ) ) ;
       pfilter = dim_shuf_arr[dim_tup];
@@ -249,18 +258,19 @@ llong * fastq2co(char* seqfname, llong *co, int Q, int M )
 			for(i=0;i<hashsize;i++)	{
 				n = HASH(drtuple, i, hashsize);
 				if (co[n] == 0LLU){
-					co[n] = (drtuple << CT_BIT) + 1LLU ;					
-					keycount++;
+					//20190910:bug fixed, otherwise occrence==1 k-mer would be skipped
+					if( M == 1) co[n] = (drtuple << CT_BIT) | CT_MAX; //--
+					else co[n] = (drtuple << CT_BIT) + 1LLU;					
           if( keycount > hashlimit)
             err(errno,"the context space is too crowd, try rerun the program using -k%d", half_ctx_len + 1);
 					break;
-				} else if ( ( co[n] >> CT_BIT ) == drtuple ) {
-
-						if( (co[n] & CT_MAX) < M )			
-							co[n]+=1LLU; 	
-						else 
-							co[n]|= CT_MAX ; 
-					break ;
+				} 
+				else if ( ( co[n] >> CT_BIT ) == drtuple ) {
+					//20190910:bug fixed, test if already to CT_MAX
+	          if( (co[n] & CT_MAX) == CT_MAX ) break;
+						co[n] += 1LLU;
+						if( !((co[n] & CT_MAX) <  M) ) co[n]|= CT_MAX ;
+						break ;					
         };
 			}; //end kmer hashing
 		};
@@ -273,7 +283,8 @@ llong * fastq2co(char* seqfname, llong *co, int Q, int M )
 // higher 40 bits for Kmer, lower 24 bits for count
 //#define OCCRC_BIT 24 // make sure it is 64 bits machine
 //#define OCCRC_MAX 0xffffffLLU //must be 1<<OCCRC_BIT - 1
-llong * fastq2koc (char* seqfname, llong *co, int Q)
+//20190910 enhanced pipecmd
+llong * fastq2koc (char* seqfname, llong *co, char *pipecmd, int Q) 
 {
 
   llong tuple = 0LLU, crvstuple = 0LLU, unituple, drtuple, pfilter;
@@ -281,7 +292,11 @@ llong * fastq2koc (char* seqfname, llong *co, int Q)
 
   FILE *infp;
   char fq_fname[PATHLEN];
-  sprintf(fq_fname,"%s %s",gzpipe_cmd,seqfname);
+	if(pipecmd[0] != '\0')
+    sprintf(fq_fname,"%s %s",pipecmd,seqfname);//other pipecmd except decompress cmd
+  else
+    sprintf(fq_fname,"%s %s",gzpipe_cmd,seqfname);
+
   if( (infp=popen(fq_fname,"r")) == NULL ) err(errno,"fastq2co():%s",fq_fname);
 
   char seq[LEN];

@@ -134,7 +134,7 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 	{		//mem_dispatch.has_arg = 1;
 		const char *qryco_dstat_fpath = NULL;
 		const char *qrymco_dstat_fpath	= NULL;
-		if(opt_val->num_remaining_args >0){
+		if((opt_val->pipecmd[0]=='\0') && (opt_val->num_remaining_args >0)){
 			qryco_dstat_fpath = test_get_fullpath(opt_val->remaining_args[0],co_dstat);
 			qrymco_dstat_fpath = test_get_fullpath(opt_val->remaining_args[0],mco_dstat);
 		}			
@@ -201,7 +201,7 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
         bool is_valid_fas_fq_in = (infile_stat->infile_num != 0) &&
           (qry_fmt_count->fasta + qry_fmt_count->fastq == infile_stat->infile_num );
 				// if is valid raw seq format		
-        if(is_valid_fas_fq_in){ //convert .fas .fq to co
+        if(is_valid_fas_fq_in || (opt_val->pipecmd[0] != '\0') ){ //convert .fas .fq to co
 
       		//const char * dist_rslt_dir = mk_dist_rslt_dir(opt_val->outdir,"kssd_dist_rslt"); 
 					const char * dist_rslt_dir = opt_val->outdir;
@@ -363,7 +363,7 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 
 			llong *co;
 			if(isOK_fmt_infile(seqfname,fastq_fmt,FQ_FMT_SZ)){
-				co = fastq2koc(seqfname,CO[tid],opt_val->kmerqlty);
+				co = fastq2koc(seqfname,CO[tid],opt_val->pipecmd, opt_val->kmerqlty);
 				ctx_ct_list[i] = write_fqkoc2file(cofname,co);
 			}
 			else{
@@ -428,13 +428,13 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
       printf("decomposing %s\n",seqfname) ;
 
       llong *co;
-
-      if(isOK_fmt_infile(seqfname,fastq_fmt,FQ_FMT_SZ)){
-				co = fastq2co(seqfname,CO[tid],opt_val->kmerqlty,opt_val->kmerocrs);
+			//20190910 caution!!!: assume pipecmd generated fastq format to pipe 
+      if(isOK_fmt_infile(seqfname,fastq_fmt,FQ_FMT_SZ) || opt_val->pipecmd[0]!='\0'){
+				co = fastq2co(seqfname,CO[tid],opt_val->pipecmd,opt_val->kmerqlty,opt_val->kmerocrs);
         ctx_ct_list[i] = write_fqco2file(cofname,co);
        }
        else{
-			 	co = fasta2co(seqfname,CO[tid]);
+			 	co = fasta2co(seqfname,CO[tid],opt_val->pipecmd);
         ctx_ct_list[i] = wrt_co2cmpn_use_inn_subctx(cofname,co);			
        }
 
@@ -1610,14 +1610,19 @@ void dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsigned i
 // remaining args(including folder or files) into a string array
 infile_tab_t* dist_organize_infiles (dist_opt_val_t *opt_val) 
 {
+	int fmt_ck;
+	if(opt_val->pipecmd[0]=='\0')
+		fmt_ck = 1; //need check format-- normal mode
+	else
+		fmt_ck = 0;  
 	//do it if fpath is not ""
 	if( strcmp( opt_val->fpath, "" ) !=0 ) 
 	{
-		return organize_infile_list(opt_val->fpath);
+		return organize_infile_list(opt_val->fpath,fmt_ck);
 	}
 	else if( opt_val->num_remaining_args > 0 )
 	{
-		return organize_infile_frm_arg(opt_val->num_remaining_args, opt_val->remaining_args);
+		return organize_infile_frm_arg(opt_val->num_remaining_args, opt_val->remaining_args,fmt_ck);
 	}
 	else
 	{
@@ -1635,10 +1640,10 @@ infile_tab_t* dist_organize_refpath( dist_opt_val_t *opt_val){
 	if( S_ISDIR(path_stat.st_mode) || isOK_fmt_infile(opt_val->refpath, acpt_infile_fmt,ACPT_FMT_SZ) ){
 		// char **tmp_arg = malloc(sizeof(char **)); 
 		char * tmp_arg[] = {opt_val->refpath};		
-		return organize_infile_frm_arg(1, tmp_arg);
+		return organize_infile_frm_arg(1, tmp_arg,1);// 0:no check fmt, 1 is defailt 
 	}
 	else if(S_ISREG(path_stat.st_mode))
-		return organize_infile_list(opt_val->refpath);
+		return organize_infile_list(opt_val->refpath,1);
 	else
 		return NULL;		
 }
