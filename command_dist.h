@@ -73,6 +73,34 @@ typedef struct mco_dirstat
   int infile_num; // use to compute last bin size
 } mco_dstat_t;
 
+typedef struct output 
+{
+	int X_size;
+	int Y_size;
+	int XnY_size;
+	double metric;
+	double dist;
+ 	double CI95_mtrc_1;  // use prime
+	double CI95_mtrc_2;
+	double CI95_dist_1;
+	double CI95_dist_2;
+	double pv;          // use prime
+} output_t;
+
+typedef struct print_ctrl
+{
+	//real print control
+	MTRIC metric;  //metric // make sure are first two element in enum { Jcd, Ctm, Bth } MTRIC (in command_dist_wrap.h);
+	PFIELD pfield; // print out filed
+	bool correction; // use rs correction or not, default not
+	double dthreshold ; // distance threshold, make sure default initialized to 1
+
+	// some unchanged variable during each qury to all reference
+  unsigned int Y_size; //query size
+  llong cmprsn_num; //total comparison, for qvalue snprintf
+  char *qname ; //queryname
+	int qry_len; //qryname string length
+}	print_ctrl_t;
 
 
 //for use in command_decomopse and iseqroco.c only, not for shuffle.c, do not include in shuffle.c
@@ -100,7 +128,7 @@ void fname_dist_print(int ref_bin_code, int qry_fcode, const char *distout_dir, 
       unsigned int*qry_ctx_ct_list, char (*refname)[PATHLEN], char (*qryfname)[PATHLEN], FILE *dout_fp);
 
 void dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsigned int qry_num, unsigned int*ref_ctx_ct_list,
-      unsigned int*qry_ctx_ct_list, int num_cof_batch, char (*refname)[PATHLEN], char (*qryfname)[PATHLEN]);
+      unsigned int*qry_ctx_ct_list, int num_cof_batch, char (*refname)[PATHLEN], char (*qryfname)[PATHLEN],dist_opt_val_t *opt_val);
 
 void koc_dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsigned int qry_num, unsigned int*ref_ctx_ct_list,
       unsigned int*qry_ctx_ct_list, int num_cof_batch, char (*refname)[PATHLEN], char (*qryfname)[PATHLEN]);
