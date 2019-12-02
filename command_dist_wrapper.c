@@ -43,9 +43,15 @@ static struct argp_option opt_dist[] =
 	{"outdir",'o',"<path>",0,"folder path for results files.\v" },
 	{"neighborN_max",'N',"INT",0,"max number of nearest reference genomes.[1]\v"},
 	{"mutDist_max",'D',"FLT",0,"max mutation allowed for distance output.[1]\v"},
+	{"metric",'M',"0/1",0,"output metrics: 0: Jaccard/1: Containment [0]\v"},
+	{"outfields",'O',"0/1/2",0,"output fields(latter includes former): Distance/Q-values/Confidence Intervels.[2]\v"},
+	{"correction",333,"0/1",0,"perform correction for shared k-mer counts or not .[0]\v" },
 //{"abundance",'A',0,0,"abundance estimate mode.\v"},
 	{"keepcofile",888,0,0,"keep intermedia .co files.\v"},
 	{"pipecmd",'P',"<cmd>",0,"pipe command.\v"},
+	{"keepskf",777,0,0,"turn on share_kmer_ct file keep mode.[false]\v"},
+	{"skf",'f',"<skfpath>",0,"share_kmer_ct file path.\v"},
+//{"onlyMashD",222,0,0,"only print mash distance.\v"},
 //{"stage2",999,0,0,"input is intermedia .co files.\v"},
   { 0 }
 };
@@ -59,25 +65,30 @@ static char doc_dist[] =
 //options collector for command dist
 dist_opt_val_t dist_opt_val = 
 { 
-8,	//half kmer len: k
-0,  // threads num: p
-2,  // dr_level;//dimension reduction level
-"", //char dr_file[PATHLEN];//dimension reduction file
-0, // double mmry; //maxMemory;
-"mfa", 
-"", //char refpath[PATHLEN]; //reference sequences path
-"",	//char fpath[PATHLEN]; //query files path
-".", //char outdir[PATHLEN]; // results dir
-1, //int kmerocrs;fastq file Kmer least occurence  
-0, //int kmerqlty; fastq file Kmer quality threshold
-false, // bool keepco; wether keep intermidia .co file or not 
-false, // input is intermeida .co folder
-1, //neighborN_max
-1, //mutDist_max
-false, // no abundance
-"", // no pipe command 
-0, //int num_remaining_args; no option arguments num. 
-NULL //char **remaining_args; no option arguments array.
+.k = 8,	//half kmer len: k
+.p = 0,  // threads num: p
+.dr_level = 2,  // dr_level;//dimension reduction level
+.dr_file = "", //char dr_file[PATHLEN];//dimension reduction file
+.mmry = 0, // double mmry; //maxMemory;
+.fmt = "mfa", 
+.refpath = "", //char refpath[PATHLEN]; //reference sequences path
+.fpath = "",	//char fpath[PATHLEN]; //query files path
+.outdir = ".", //char outdir[PATHLEN]; // results dir
+.kmerocrs = 1, //int kmerocrs;fastq file Kmer least occurence  
+.kmerqlty = 0, //int kmerqlty; fastq file Kmer quality threshold
+.keepco = false, // bool keepco; wether keep intermidia .co file or not 
+.stage2 = false, // input is intermeida .co folder
+.num_neigb = 0, //neighborN_max, 0 means all
+.mut_dist_max = 1, //mutDist_max
+.metric = Jcd,
+.outfields = CI,
+.correction = false,
+.abundance = false, // no abundance
+.pipecmd = "", // no pipe command 
+.shared_kmerpath="", // share_kmer_ct file path
+.keep_shared_kmer=false, //not keep share_kmer_ct file 
+.num_remaining_args = 0, //int num_remaining_args; no option arguments num. 
+.remaining_args = NULL //char **remaining_args; no option arguments array.
 } ;
 
 const char outdir_name[] = "kssd_rslt" ;
@@ -180,7 +191,7 @@ static error_t parse_dist(int key, char* arg, struct argp_state* state) {
     }
 		case 'N':
 		{
-			dist_opt_val.mut_dist_max = atoi(arg);
+			dist_opt_val.num_neigb = atoi(arg);
 			break;
 		}
 		case 'D':
@@ -202,6 +213,21 @@ static error_t parse_dist(int key, char* arg, struct argp_state* state) {
       strcpy(dist_opt_val.pipecmd,arg);
       break;
 		}
+		case 'M':
+		{
+			dist_opt_val.metric = atoi(arg) ;	
+			break;
+		}
+		case 'O':
+    {
+      dist_opt_val.outfields = atoi(arg) ;
+      break;
+    }
+		case 'f':
+		{
+			strcpy(dist_opt_val.shared_kmerpath,arg);
+			break;
+		}
 		case 888:
 		{
 			dist_opt_val.keepco = true;
@@ -212,11 +238,20 @@ static error_t parse_dist(int key, char* arg, struct argp_state* state) {
 			dist_opt_val.stage2 = true;
       break;
 		}
+		case 333:
+    {
+      dist_opt_val.correction = atoi(arg) ;
+      break;
+    }
+		case 777:
+		{
+			dist_opt_val.keep_shared_kmer = true;
+			break;
+		}
 		case ARGP_KEY_ARGS:
 				dist_opt_val.num_remaining_args = state->argc - state->next;
         dist_opt_val.remaining_args  = state->argv + state->next;	
 			break;
-
     case ARGP_KEY_NO_ARGS:
     {
 			if(state->argc < 2)
@@ -243,6 +278,9 @@ static error_t parse_dist(int key, char* arg, struct argp_state* state) {
     return ARGP_ERR_UNKNOWN;
 		}
  }
+	//prohibit cases
+//	if( (dist_opt_val.metric == Bth) && ( dist_opt_val.num_neigb != 0 || dist_opt_val.mut_dist_max < 1 ) ) err(errno,"when set -M 2, -D and -N should not be set.");
+
   return 0;
 }
 

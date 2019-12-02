@@ -7,7 +7,8 @@
 
 int cmd_dist(struct argp_state* state);
 const char *mk_dist_rslt_dir (const char *parentdirpath, const char * outdirpath );
-
+typedef enum { Jcd, Ctm } MTRIC; // metric selection, Jcd: jaccard; Ctm : containment; //Bth: both.
+typedef enum { Dst, Qv, CI} PFIELD; //print filed, Dst:only metric + MTRIC dist, Qv: dist+pvalue and Qvalue, CI:dist+pvalue and Qvalue +confidence intervel  
 typedef struct dist_opt_val
 {
   int k ; //halfctx len
@@ -26,8 +27,13 @@ typedef struct dist_opt_val
 	bool stage2; //input is intermedia .co or not
 	int num_neigb; // distance output filter: num of nearest neight 
 	double mut_dist_max;// distance output filter: maximun allow mutation distance
+	MTRIC	metric;       //set output metric, Jcd, Ctm, Both 
+	PFIELD outfields;   // set ouput fields
+	bool correction; // if do shared kmer count correction
 	bool abundance;
 	char pipecmd[PATHLEN]; //pipe command
+	char shared_kmerpath[PATHLEN];
+	bool keep_shared_kmer;
   int num_remaining_args;
   char **remaining_args;
   //char outp[128]= "./";
