@@ -1,5 +1,6 @@
 #ifndef GLOBAL_BASIC
 #define GLOBAL_BASIC
+#include <stdbool.h>
 /*CTX/OBJ/Kmer maskers*/
 #define _64MASK 0xffffffffffffffffLLU
 //#define TUPMASK (_64MASK >> (64-BITTL))
@@ -10,7 +11,7 @@
 	#define OBJ_ALPH 16
 	#define OBJ_BITS 4
 	#define BIN_SZ 4096 // maximum sequences allowed in one bin 
-	#include <stdbool.h>
+//	#include <stdbool.h>
   extern const bool Objdist[16][16];
   #define IS_DIFF(X,Y) ( Objdist[(X)][(Y)] )
 
@@ -111,6 +112,18 @@ infile_tab_t * organize_infile_list(char* list_path,int fmt_ck);
 infile_tab_t * organize_infile_frm_arg (int num_remaining_args, char ** remaining_args,int fmt_ck);
 //per bin get file basename and estimate .co files (before dimension reduction) memory usage.
 bin_stat_t * get_bin_basename_stat(infile_entry_t* organized_infile_tab, int *shuffle_arr,int binsz);
+
+typedef struct co_dirstat
+{
+  unsigned int shuf_id;
+  bool koc; //kmer occurence or not
+  int kmerlen; //2*k
+  int dim_rd_len; //2*drlevel
+  int comp_num; // components number
+  int infile_num; // .co file num, .co file with many components only count as 1
+  //int comp_sz[comp_num * infile_num]; // do this if storage all .co per mco bin in one file
+  llong all_ctx_ct;
+} co_dstat_t;
 
 //********** input file formats test ********************//
 
@@ -214,6 +227,7 @@ static inline mmp_uint_t mmp_uint_arr (char *cofname)
 };
 int str_suffix_match(char *str, const char *suf); 
 const char * get_pathname(const char *fullpath, const char *suf);
+const char* test_get_fullpath(const char *parent_path, const char *dstat_f);
 // infile fmt count struct
 typedef struct
 {
