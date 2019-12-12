@@ -51,6 +51,7 @@ typedef struct mem_usage_stat
 } mem_usage_stat_t;
 
 typedef long long int llint;
+/* move to global.h bcs command_set use it
 typedef struct co_dirstat
 {	
 	unsigned int shuf_id;
@@ -62,7 +63,7 @@ typedef struct co_dirstat
   //int comp_sz[comp_num * infile_num]; // do this if storage all .co per mco bin in one file
 	llong all_ctx_ct;	
 } co_dstat_t;
-
+*/
 typedef struct mco_dirstat
 {
 	unsigned int shuf_id;
@@ -112,7 +113,7 @@ int dist_dispatch(struct dist_opt_val* opt_val);
 infile_tab_t* dist_organize_infiles (dist_opt_val_t *opt_val);
 infile_tab_t* dist_organize_refpath (dist_opt_val_t *opt_val);
 //const char* get_co_dstat_fpath(const char *refpath); 
-const char* test_get_fullpath(const char *parent_path, const char *dstat_f);
+//const char* test_get_fullpath(const char *parent_path, const char *dstat_f);
 dim_shuffle_t *get_dim_shuffle( dist_opt_val_t *opt_val_in );
 int get_hashsz(dim_shuffle_t *dim_shuffle_in );
 const char * run_stageI (dist_opt_val_t *opt_val,infile_tab_t *seqfile_stat, 
