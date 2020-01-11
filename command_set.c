@@ -253,22 +253,26 @@ int sketch_operate()
 	if(co_dstat_fpath == NULL ) err(errno,"cannot find %s under %s ",co_dstat,set_opt.insketchpath);
 	struct stat s;
 	if(stat(co_dstat_fpath, &s) != 0)  err(errno,"sketch_operate():%s",co_dstat_fpath);
-	co_dstat_t *tmpmem = malloc(s.st_size);
+	size_t codstat_fz = s.st_size;
+	co_dstat_t *tmpmem = malloc(codstat_fz);
 	if( ( co_stat_fp = fopen(co_dstat_fpath,"rb")) == NULL ) err(errno,"sketch_operate():%s",co_dstat_fpath);
-	fread(tmpmem,s.st_size, 1, co_stat_fp);
+	fread(tmpmem,codstat_fz, 1, co_stat_fp);
 	co_dstat_origin = *tmpmem;	
 	if (co_dstat_pan.shuf_id != co_dstat_origin.shuf_id) err(errno,"sketcing id not match(%d Vs. %d)",co_dstat_origin.shuf_id,co_dstat_pan.shuf_id);
-	
 	fclose(co_stat_fp);
+
+	unsigned int *tmp_ctx_ct = (void *) tmpmem + sizeof(co_dstat_t);   
+	memset(tmp_ctx_ct,0,co_dstat_origin.infile_num*sizeof(unsigned int)) ;
 
 	mkdir(set_opt.outdir,0777);
 	char tmppath[PATHLEN];	
+/*
 	sprintf(tmppath,"%s/%s",set_opt.outdir,co_dstat);
 	if( ( co_stat_fp = fopen(tmppath,"wb")) == NULL) err(errno,"sketch_operate():%s",tmppath);
 	fwrite(tmpmem,s.st_size,1, co_stat_fp);
 	free(tmpmem);
 	fclose(co_stat_fp);
-
+*/
 	size_t *fco_pos = malloc(sizeof(size_t) * (co_dstat_origin.infile_num + 1) );
 	size_t *post_fco_pos = malloc(sizeof(size_t) * (co_dstat_origin.infile_num + 1) );
 	post_fco_pos[0] = 0;
@@ -310,7 +314,8 @@ int sketch_operate()
 				//make sure set_opt.operation == 0 if subtract, == 1 if intersect
 				if( set_opt.operation == ( (dict[ cbd_fcode_mem[ fco_pos[i] + n ]/64 ] & (0x8000000000000000LLU >> (cbd_fcode_mem[ fco_pos[i] + n ] % 64)) ) > 0 ) ){ 
 					fwrite(cbd_fcode_mem + fco_pos[i] + n, sizeof(unsigned int), 1, co_stat_fp); 
-					post_fco_pos[i+1]++;					
+					post_fco_pos[i+1]++;
+					tmp_ctx_ct[i]++;					
 				}
 			}
 		}
@@ -321,6 +326,13 @@ int sketch_operate()
 		fwrite(post_fco_pos,sizeof(size_t),co_dstat_origin.infile_num + 1,co_stat_fp);
 		fclose(co_stat_fp);	
 	}
+	
+	sprintf(tmppath,"%s/%s",set_opt.outdir,co_dstat);
+  if( ( co_stat_fp = fopen(tmppath,"wb")) == NULL) err(errno,"sketch_operate():%s",tmppath);
+  fwrite(tmpmem,codstat_fz,1,co_stat_fp);
+  free(tmpmem);
+  fclose(co_stat_fp);
+		
 
 	ret = 0; 
 	return ret ;	

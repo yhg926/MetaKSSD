@@ -50,8 +50,6 @@ static char doc_global[] =
 "\n"
       "  shuffle	shuffle/sampling k-mer substring space.\n"
 "\n"
-			"  set     	sketch union/intersection/substraction.\n"
-"\n"
       "  dist   	sequences sketching and distance estimation.\n"
 "\n"
  			"  set    	sketch union/intersection/substraction.\n"
