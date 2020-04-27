@@ -413,7 +413,15 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
     free(cof_index_in_cbdco);
    }	
 
-	} 
+	}
+	//20200423 new feature: sketch by reads
+	if(opt_val->byread){
+		for(int i = 0; i< seqfile_stat->infile_num; i++){
+			char* seqfname = seqfile_stat->organized_infile_tab[ shuffled_seqfname_ind[i] ].fpath;
+			printf("decomposing %s by reads\n",seqfname) ;
+			reads2mco(seqfname, co_dir, opt_val->pipecmd);
+		}
+	}
 	else { // normal mode
 
 #pragma omp parallel for num_threads(p_fit_mem) reduction(+:all_ctx_ct) schedule(guided)
