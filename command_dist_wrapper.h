@@ -34,6 +34,7 @@ typedef struct dist_opt_val
 	char pipecmd[PATHLEN]; //pipe command
 	char shared_kmerpath[PATHLEN];
 	bool keep_shared_kmer;
+	bool byread;
   int num_remaining_args;
   char **remaining_args;
   //char outp[128]= "./";
