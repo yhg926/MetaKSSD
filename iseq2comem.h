@@ -18,4 +18,6 @@ llong write_fqco2file(char* cofilename, llong *co);
 llong wrt_co2cmpn_use_inn_subctx(char* cofilename, llong *co);
 llong writeco2file(char* cofilename, llong *co);
 llong write_fqkoc2file(char* cofilename, llong *co);
+int reads2mco(char* seqfname,const char *co_dir, char * pipecmd);
+
 #endif
