@@ -80,6 +80,133 @@ void seq2co_global_var_initial(void)
 	dim_end = MIN_SUBCTX_DIM_SMP_SZ ;
 };
 
+// reads2mco, per read per co, combined into mco, repeat k-mer allowed 
+int reads2mco(char* seqfname,const char *co_dir, char * pipecmd){
+#define unit_incrs 1000000 //realloc increase unit 
+int comp_code_bits = half_ctx_len - drlevel > COMPONENT_SZ ? 4*(half_ctx_len - drlevel - COMPONENT_SZ ) : 0  ;
+
+	size_t **cof_count = malloc( component_num * sizeof (size_t*) ); 
+	FILE **outindf = malloc(component_num * sizeof(FILE *));
+	FILE **outf  = malloc(component_num * sizeof(FILE *));
+	char indexfname[PATHLEN]; char combined_cof[PATHLEN];
+	
+	size_t cof_count_sz = unit_incrs;
+	for(int i=0;i<component_num ;i++)
+  {
+		cof_count[i] = (size_t *)calloc( cof_count_sz , sizeof(size_t) );
+		sprintf(combined_cof,"%s/combco.%d",co_dir,i);
+		sprintf(indexfname,"%s/combco.index.%d",co_dir,i);
+  	if( (outf[i] = fopen(combined_cof,"wb")) == NULL) err(errno,"%s",combined_cof);
+    if( (outindf[i] = fopen(indexfname,"wb")) == NULL) err(errno,"%s",indexfname);				
+  };	
+
+
+	FILE *infp;
+	char fas_fname[PATHLEN];
+	if(pipecmd[0] != '\0'){
+		sprintf(fas_fname,"%s %s",pipecmd,seqfname);
+		if( (infp=popen(fas_fname,"r")) == NULL ) err(errno,"reads2mco():%s",fas_fname);
+	}
+	else
+		if( (infp=fopen(seqfname,"r")) == NULL ) err(errno,"reads2mco():%s",fas_fname);;
+	
+	
+	char seqin_buff[ READSEQ_BUFFSZ + 1 ];
+	int newLen =  fread(seqin_buff, sizeof(char),READSEQ_BUFFSZ,infp);	
+	if(! (newLen >0) )  err(errno,"reads2mco():eof or fread error file=%s",seqfname);
+
+	llong base = 1; char ch; int basenum;
+	llong tuple = 0LLU, crvstuple = 0LLU,
+  unituple, drtuple, pfilter;
+	llong readn = 0; //initial readn;
+	for(int pos = 0; pos <= newLen; pos++)
+  {
+    if(pos == newLen){
+        newLen =  fread(seqin_buff, sizeof(char),READSEQ_BUFFSZ,infp);
+      if(newLen > 0)
+        pos = 0;
+      else break;
+    };
+    ch = seqin_buff[pos];
+    basenum = Basemap[(int)ch];
+
+    if(basenum != DEFAULT) //make sure basenum is not negative
+    {
+      tuple = ( ( tuple<< 2 ) | (llong)basenum ) & tupmask ;
+      crvstuple = ( crvstuple >> 2 ) + (((llong)basenum^3LLU) << crvsaddmove);
+      base++;
+    }
+    else if ( (ch == '\n') || (ch == '\r') ) { continue;}
+    else if (isalpha(ch)){ base=1; continue; }
+    else if ( ch == '>' )
+    {
+			if( readn > cof_count_sz ){ //realloc
+				for(int i=0;i<component_num ;i++){
+					size_t *newtmp = (size_t *)realloc(cof_count[i], (cof_count_sz + unit_incrs) * sizeof(size_t));
+					if (newtmp != NULL) {
+ 						cof_count[i] = newtmp;
+						memset(cof_count[i] + cof_count_sz  ,0, unit_incrs * sizeof(size_t) );	
+					}
+					else err(errno,"cof_count[%d] realloc failed",i);
+				}	
+				cof_count_sz += unit_incrs;
+			}	
+			readn++;
+ 
+     while( (pos < newLen ) && ( seqin_buff[pos] != '\n' ) )
+      {
+        if (pos < newLen - 1)
+          pos++;
+        else
+        {
+          newLen = fread(seqin_buff, sizeof(char),READSEQ_BUFFSZ,infp);
+          if(newLen > 0) pos = -1; // pos = 0 is bug ? should be pos = -1 , since continue and pos++
+          else err(errno,"fasta2co(): can not find seqences head start from '>' %d",newLen);
+        };
+      };
+      base = 1;
+      continue;
+    }
+    else {
+    //  warnx("ignorn illegal charactor%c \n",ch);
+      base=1;
+      continue;
+    };
+
+    if( base > TL ) // if(!(base < TL))
+    {
+      //make sure unituple == min(tuple,crvstuple);
+      unituple = tuple < crvstuple ? tuple:crvstuple;
+      //only for 64bits Kmer storage ,
+      //important !!!! make sure is right
+      int dim_tup = ((unituple & domask) >> ( (half_outctx_len)*2 ) ) ;
+      pfilter = dim_shuf_arr[dim_tup];
+      if( ( pfilter >= dim_end) || (pfilter < dim_start ) ) continue;
+      pfilter = pfilter - dim_start; //add 190307: prevent pfilter > MIN_SUBCTX_DIM_SMP_SZ when dim_start >0
+      drtuple = ( ( (unituple & undomask) //left half outer ctx
+              + ( ( unituple & ( ( 1LLU<< ( half_outctx_len*2) ) - 1)) << (TL*2 - half_outctx_len*4) ) )
+              >> ( drlevel*4 ) ) // subctx dim reduced
+              +  pfilter ; //  subctx dim after reduction
+	
+			cof_count[drtuple % component_num][readn]++;	//ctx_count for each components each read				
+			unsigned int newid = (unsigned int)( drtuple >> comp_code_bits ) ;
+			fwrite( &newid, sizeof(unsigned int),1,outf[(int)( drtuple % component_num )] );				 			
+   };
+  };//end file hashing
+	
+	for(int i=0;i<component_num ;i++){ //write index
+		llong cumval = 0 ; // cumulated value 
+		for(llong n=0; n<readn;n++ ){
+			cumval += cof_count[i][n]; 
+			fwrite(&cumval, sizeof(llong),1,outindf[i]);
+		}
+
+		fclose(outf[i]);
+		fclose(outindf[i]);
+	}
+	printf("decomposing %s by reads is complete!\n",seqfname);  	
+	return 1;
+}
 
 const char gzpipe_cmd[]= "zcat -fc"; //const char gzpipe_cmd[]= "unpigz -fc";
 

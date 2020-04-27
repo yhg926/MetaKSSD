@@ -51,6 +51,7 @@ static struct argp_option opt_dist[] =
 	{"pipecmd",'P',"<cmd>",0,"pipe command.\v"},
 	{"keepskf",777,0,0,"turn on share_kmer_ct file keep mode.[false]\v"},
 	{"skf",'f',"<skfpath>",0,"share_kmer_ct file path.\v"},
+	{"byread",555,0,0,"sketch the file by read[false].\v"},
 //{"onlyMashD",222,0,0,"only print mash distance.\v"},
 //{"stage2",999,0,0,"input is intermedia .co files.\v"},
   { 0 }
@@ -87,6 +88,7 @@ dist_opt_val_t dist_opt_val =
 .pipecmd = "", // no pipe command 
 .shared_kmerpath="", // share_kmer_ct file path
 .keep_shared_kmer=false, //not keep share_kmer_ct file 
+.byread=false,	
 .num_remaining_args = 0, //int num_remaining_args; no option arguments num. 
 .remaining_args = NULL //char **remaining_args; no option arguments array.
 } ;
@@ -202,6 +204,11 @@ static error_t parse_dist(int key, char* arg, struct argp_state* state) {
 		case 'A':
 		{
 			dist_opt_val.abundance = true;
+			break;
+		}
+		case 555:
+		{
+			dist_opt_val.byread = true;
 			break;
 		}
 		case 'P':
