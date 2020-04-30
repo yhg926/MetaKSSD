@@ -37,7 +37,7 @@
 #endif
 
 #ifndef CTX_SPC_USE_L
-#define CTX_SPC_USE_L 4 // 8 for small mem.(< 1g), 4 for larger mem.  //ctx space occupy rate limit = 1/(1<<CTX_SPC_USE_L)  
+#define CTX_SPC_USE_L 8 // 8 for small mem.(< 1g), 4 for larger mem.  //ctx space occupy rate limit = 1/(1<<CTX_SPC_USE_L)  
 #endif
 
 #define CTX_DR_LMT 100 //limit for least CTX after dimensionality reduction
