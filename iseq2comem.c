@@ -196,7 +196,7 @@ int comp_code_bits = half_ctx_len - drlevel > COMPONENT_SZ ? 4*(half_ctx_len - d
 	
 	for(int i=0;i<component_num ;i++){ //write index
 		llong cumval = 0 ; // cumulated value 
-		for(llong n=0; n<readn;n++ ){
+		for(llong n=0; n<=readn;n++ ){
 			cumval += cof_count[i][n]; 
 			fwrite(&cumval, sizeof(llong),1,outindf[i]);
 		}
