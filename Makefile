@@ -6,5 +6,3 @@ alert:
 	$(CC) $(CFLAGS) -DCOMPONENT_SZ=6 *.c -o ./kssd -lm
 strange:
 	$(CC) $(CFLAGS) -DCTX_SPC_USE_L=10 *.c -o ./kssd -lm
-big:
-	$(CC) $(CFLAGS) -DCTX_SPC_USE_L=4 *.c -o ./bigkssd -lm
