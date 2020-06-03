@@ -912,7 +912,6 @@ void mco_cbd_co_dist(dist_opt_val_t *opt_val_in)
 	
   fprintf(logfp,"distance output to : %s\n",distf);
   printf("distance output to : %s\n",distf);
-
 	dist_print_nobin(distout_dir,ref_seq_num, qry_seq_num, ref_ctx_ct_list, qry_ctx_ct_list,num_cof_batch,mcofname, cofname, opt_val_in);
 
   free(ref_ctx_ct_list);
@@ -1478,7 +1477,7 @@ void koc_dist_print_nobin ( const char *distout_dir,unsigned int ref_num, unsign
 void dist_print_nobin (const char *distout_dir,unsigned int ref_num, unsigned int qry_num, unsigned int*ref_ctx_ct_list,
       unsigned int*qry_ctx_ct_list, int num_cof_batch, char (*refname)[PATHLEN], char (*qryfname)[PATHLEN],dist_opt_val_t *opt_val) 
 { // 1. matrix or not? 2. only subset or full columns 3. maximal distance/num of referece reported  
-
+	
 	if( opt_val->shared_kmerpath[0] != '\0') strcpy(full_distfcode, opt_val->shared_kmerpath );
   else sprintf(full_distfcode,"%s/sharedk_ct.dat",distout_dir);
   int fd;
@@ -1544,6 +1543,8 @@ void dist_print_nobin (const char *distout_dir,unsigned int ref_num, unsigned in
         	double metric = outfield.metric == Ctm ?
 						  (double) XnY_size / (X_size < outfield.Y_size ? X_size : outfield.Y_size) : // sort by Ctm only id metric is Ctm
 						  (double) XnY_size / (X_size + outfield.Y_size - XnY_size) ; // if metric is Jcd or Bth use Jcd for sort
+
+					
 					// if equal resluts depened on the order of refid, so make sure any two references are substantially different
 					for(int i = N_max - 1 ; i>=0; i-- ){
 						if(metric > bestNref[i].metric){ // for larger selection, otherwise use < and differnt bestNref[NREF] initialization values
@@ -1551,15 +1552,16 @@ void dist_print_nobin (const char *distout_dir,unsigned int ref_num, unsigned in
 								bestNref[i] = (Nref_stuct){ metric, rid };
 						}
 						else break;
-					} 														
+					}
 				}
 #pragma omp parallel for  num_threads(p_fit_mem) schedule(guided)
-				for( int i = 0 ; i< N_max;i++ )
-					output_ctrl( ref_ctx_ct_list[ bestNref[i].rid ], ctx_obj_ct[offset + bestNref[i].rid], &outfield, refname[bestNref[i].rid], &prt_buf[i]);
-
+				for( int i = 0 ; i< N_max;i++ ){
+					if (bestNref[i].rid != -1) // fix bug :20200504 
+						 output_ctrl( ref_ctx_ct_list[ bestNref[i].rid ], ctx_obj_ct[offset + bestNref[i].rid], &outfield, refname[bestNref[i].rid], &prt_buf[i]);
+					else prt_buf[i].len = 0 ; //20200504: filtered out when fwrited to ./disntance.out in next step
+				}
 				for( int i = 0 ; i< N_max;i++ )
           if(prt_buf[i].len >1) fwrite(prt_buf[i].line, prt_buf[i].len, 1, distfp);;				
-				
 			}
 			else {
 #pragma omp parallel for  num_threads(p_fit_mem) schedule(guided)
@@ -1613,6 +1615,7 @@ static inline void output_ctrl (unsigned int X_size, unsigned int XnY_size, prin
 		}	
 	}
 	snprintf(linebuf->line + linebuf->len, LINE_LEN - linebuf->len,"\n"); // line end	
+
 	linebuf->len += 1;	
 } 
 
