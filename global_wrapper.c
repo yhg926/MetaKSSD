@@ -14,6 +14,8 @@
 #include <argp.h>
 #include <argz.h>
 
+char *domain;
+char *long_domain;
 /***===========global wraper=========== ***/
 
 static struct argp_option opt_global[] = {
