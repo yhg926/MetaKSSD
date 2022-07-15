@@ -22,10 +22,11 @@
 
 #define HIBITSET1 0x8000000000000000LLU
 #define _64MASK 0xffffffffffffffffLLU
+/* mv to global_basic.h 20220714
 #define H1(K,HASH_SZ) ((K)%(HASH_SZ))
 #define H2(K,HASH_SZ) ( 1 + (K) % ( (HASH_SZ) - 1 ) )
 #define HASH(K,I,HASH_SZ) ( ( H1(K,HASH_SZ) + I * H2(K,HASH_SZ) ) % HASH_SZ )
-
+*/
 static int rand_id;
 static int half_ctx_len;
 static int half_subctx_len;
@@ -407,9 +408,9 @@ llong * fastq2co(char* seqfname, llong *co, char *pipecmd, int Q, int M ) //2019
 }; // end fastq2co()
 
 // fastq2co with occurence
-// higher 40 bits for Kmer, lower 24 bits for count
-//#define OCCRC_BIT 24 // make sure it is 64 bits machine
-//#define OCCRC_MAX 0xffffffLLU //must be 1<<OCCRC_BIT - 1
+// higher 48 bits for Kmer, lower 16 bits for count
+#define OCCRC_BIT 16 // make sure it is 64 bits machine
+#define OCCRC_MAX 0xffffLLU //must be 1<<OCCRC_BIT - 1
 //20190910 enhanced pipecmd
 llong * fastq2koc (char* seqfname, llong *co, char *pipecmd, int Q) 
 {
@@ -424,7 +425,7 @@ llong * fastq2koc (char* seqfname, llong *co, char *pipecmd, int Q)
   else
     sprintf(fq_fname,"%s %s",gzpipe_cmd,seqfname);
 
-  if( (infp=popen(fq_fname,"r")) == NULL ) err(errno,"fastq2co():%s",fq_fname);
+  if( (infp=popen(fq_fname,"r")) == NULL ) err(errno,"fastq2koc():%s",fq_fname);
 
   char seq[LEN];
   char qual[LEN];
@@ -485,8 +486,7 @@ llong * fastq2koc (char* seqfname, llong *co, char *pipecmd, int Q)
 
             if( (co[n] & OCCRC_MAX) < OCCRC_MAX )
               co[n]+=1LLU;
-            else
-              co[n]|= OCCRC_MAX ;
+            //else co[n]|= OCCRC_MAX ;
           break ;
         };
       }; //end kmer hashing
@@ -495,6 +495,54 @@ llong * fastq2koc (char* seqfname, llong *co, char *pipecmd, int Q)
   pclose(infp);
   return co;
 }; // end fastq2koc();
+
+unsigned int write_fqkoc2files(char* cofilename, llong *co)
+{
+  int comp_code_bits = half_ctx_len - drlevel > COMPONENT_SZ ? 4*(half_ctx_len - drlevel - COMPONENT_SZ ) : 0  ;
+  FILE **outf,**abdf; //sketch and occurence files
+  outf = malloc(component_num * sizeof(FILE *));
+	abdf = malloc(component_num * sizeof(FILE *));
+  char cofilename_with_component[PATHLEN];
+
+  for(int i=0;i<component_num ;i++)
+  {
+    sprintf(cofilename_with_component,"%s.%d",cofilename,i);
+    if ( (outf[i] = fopen(cofilename_with_component,"wb") ) == NULL )
+      err(errno,"write_fqkoc2files()") ;
+	
+		sprintf(cofilename_with_component,"%s.%d.a",cofilename,i);
+		if ( (abdf[i] = fopen(cofilename_with_component,"wb") ) == NULL )
+      err(errno,"write_fqkoc2files()") ;
+  };
+
+  unsigned int count, wr = 0, newid,compi; //compi: component index
+	unsigned short abdc; //abundance 
+		
+
+  for(count=0;count < hashsize; count++)
+  {
+    if( co[count] > 0 ) {
+			
+			compi = (co[count] >> OCCRC_BIT ) % component_num;
+
+      newid = (unsigned int)(co[count] >> (comp_code_bits + OCCRC_BIT));
+      fwrite( &newid, sizeof(newid),1,outf[compi] );
+			
+			abdc = co[count] & OCCRC_MAX;
+			fwrite( &abdc, sizeof(abdc),1,abdf[compi] );
+		
+      wr++;
+    }
+  }
+
+  for(int i=0;i<component_num ;i++){
+    fclose(outf[i]);
+		fclose(abdf[i]);
+	}
+  free(outf);
+	free(abdf);
+  return wr;
+};
 
 llong write_fqkoc2file(char* cofilename, llong *co)
 {
