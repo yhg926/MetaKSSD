@@ -1,0 +1,371 @@
+#include "command_component.h"
+#include "global_basic.h"
+#include <assert.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <argp.h>
+#include <argz.h>
+#include <err.h>
+#include <errno.h>
+#include <math.h>
+/*** argp wrapper ***/
+struct arg_component
+{
+  struct arg_global* global;
+
+  char* name;
+};
+
+static struct argp_option opt_component[] =
+{
+	{"ref",'r',"<DIR>", 0, "Path of species specific pan uniq kmer database (reference) \v",1},
+	{"query",'q',"<DIR>", 0, "Path of query sketches with abundances \v",2},
+	{"outfile",'o',"<DIR>",0,"Output path, result file ia named as 'components.out' \v",3},
+	{"threads",'p',"<INT>", 0, "Threads number to use \v",4},
+  { 0 }
+};
+
+static char doc_component[] =
+  "\n"
+  "The component doc prefix."
+  "\v"
+  "The component doc suffix."
+  ;
+
+component_opt_t component_opt ={
+	.p = 1,
+	.refdir[0] = '\0',
+	.qrydir[0] = '\0',
+	.outdir = "./"
+};
+
+static error_t parse_component(int key, char* arg, struct argp_state* state) {
+  struct arg_component* component = state->input;
+  assert( component );
+  assert( component->global );
+	
+  switch(key)
+  {
+		case 'p':
+		{
+			component_opt.p = atoi(arg);
+			break;
+		}
+		case 'r':
+		{
+			strcpy(component_opt.refdir, arg);
+			break;
+		}
+		case 'q':
+		{
+			strcpy(component_opt.qrydir, arg);
+			break;
+		}
+		case 'o':
+		{
+			strcpy(component_opt.outdir, arg);
+			break;
+		}
+    case ARGP_KEY_NO_ARGS:
+    {	
+			if(state->argc<2)
+			{
+      	printf("\v");
+				argp_state_help(state,stdout,ARGP_HELP_SHORT_USAGE);
+				printf("\v");
+      	argp_state_help(state,stdout,ARGP_HELP_LONG);
+      	printf("\v");
+      	return EINVAL;
+			}
+    }
+		break;
+    default:
+      return ARGP_ERR_UNKNOWN;
+  }
+  return 0;
+}
+
+static struct argp argp_component =
+{
+  opt_component,
+  parse_component,
+	0,//  "[arguments ...]",
+  doc_component
+};
+
+int cmd_component(struct argp_state* state)
+{
+  struct arg_component component = { 0, };
+  int    argc = state->argc - state->next + 1;
+  char** argv = &state->argv[state->next - 1];
+  char*  argv0 =  argv[0];
+
+  component.global = state->input;
+	argv[0] = malloc(strlen(state->name) + strlen(" component") + 1);
+
+  if(!argv[0])
+    argp_failure(state, 1, ENOMEM, 0);
+	sprintf(argv[0], "%s component", state->name);
+  argp_parse(&argp_component, argc, argv, ARGP_IN_ORDER, &argc, &component);
+		
+  free(argv[0]);
+  argv[0] = argv0;
+  state->next += argc - 1;
+	
+	if(argc >1)	
+		return get_species_abundance (&component_opt);
+	else
+		return -1;
+}
+
+
+
+
+int **ref_abund; //make it globle, seen by qsort comparetor
+// this version get_species_abundance () assume few qry input genome,
+// it waste time in reading qry in for qry.infile_num loop 
+int get_species_abundance (component_opt_t * component_opt) { //by uniq kmer in a species
+	
+	if ( component_opt->refdir[0] == '\0' || component_opt->qrydir[0] == '\0' || strcmp (component_opt->refdir, component_opt->qrydir) == 0 ) 
+		err(errno, "get_species_abundance(): refdir or qrydir is not initialized\n" );
+	
+	const char *ref_dstat_fpath = test_get_fullpath(component_opt->refdir,co_dstat);
+	if (ref_dstat_fpath == NULL) err(errno,"cannot find %s under %s ",co_dstat, ref_dstat_fpath);
+  const char *qry_dstat_fpath = test_get_fullpath(component_opt->qrydir,co_dstat);
+	if (qry_dstat_fpath == NULL) err(errno,"cannot find %s under %s ",co_dstat, qry_dstat_fpath); 
+	
+	FILE *ref_dstat_fp, *qry_dstat_fp ;
+	if( (ref_dstat_fp = fopen(ref_dstat_fpath,"rb")) == NULL ) err(errno, "get_species_abundance():%s",ref_dstat_fpath);
+	if( (qry_dstat_fp = fopen(qry_dstat_fpath,"rb")) == NULL ) err(errno, "get_species_abundance():%s",qry_dstat_fpath);
+	co_dstat_t ref_dstat, qry_dstat ;
+	fread( &ref_dstat, sizeof(co_dstat_t),1,ref_dstat_fp); 
+	fread( &qry_dstat, sizeof(co_dstat_t),1,qry_dstat_fp);
+
+	if(!qry_dstat.koc) err(errno, "get_species_abundance(): query has not abundance");
+	if(qry_dstat.shuf_id != ref_dstat.shuf_id) 
+		printf("get_species_abundance(): qry shuf_id %u not match ref shuf_id: %u\n",qry_dstat.shuf_id, ref_dstat.shuf_id);
+
+
+	ctx_obj_ct_t* tmp_ct_list = malloc(sizeof(ctx_obj_ct_t) * ref_dstat.infile_num);
+  fread(tmp_ct_list,sizeof(ctx_obj_ct_t),ref_dstat.infile_num,ref_dstat_fp);
+	char (*refname)[PATHLEN] = malloc(PATHLEN * ref_dstat.infile_num);	
+  fread(refname,PATHLEN,ref_dstat.infile_num,ref_dstat_fp);
+
+  fread(tmp_ct_list,sizeof(ctx_obj_ct_t),qry_dstat.infile_num,qry_dstat_fp);
+  free(tmp_ct_list);
+
+  char (*qryname)[PATHLEN] = malloc(PATHLEN * qry_dstat.infile_num);
+  fread(qryname,PATHLEN,qry_dstat.infile_num, qry_dstat_fp);
+
+
+	
+	char tmpfname[PATHLEN];
+	struct stat tmpstat;	
+	FILE *tmpfp;
+
+
+//malloc ref_abund
+#define REALLOC_US 8 //realloc unit size
+	ref_abund = (int **)malloc(ref_dstat.infile_num* sizeof(int *));
+	for (int i = 0; i < ref_dstat.infile_num; i++) ref_abund[i] = (int *)malloc(REALLOC_US *sizeof(int)); 
+
+	for(int qn = 0; qn < qry_dstat.infile_num; qn++) { // for each query genome, not suite for qry num is large
+		for (int i = 0; i < ref_dstat.infile_num; i++) ref_abund[i][0] = 0 ;// initilize the shared kmer count
+
+		for(int c = 0;  c < ref_dstat.comp_num; c++){ // for each kmer subspace component c
+			//read ref sketch 
+			sprintf(tmpfname,"%s/%s.%d",component_opt->refdir,skch_prefix,c);
+			if( (tmpfp = fopen(tmpfname,"rb"))==NULL) err(errno,"get_species_abundance():%s",tmpfname);
+			stat(tmpfname, &tmpstat);
+			unsigned int *ref_combco = malloc(tmpstat.st_size);
+			fread(ref_combco, tmpstat.st_size, 1, tmpfp);
+			fclose(tmpfp);
+			//read ref sketch index		
+			sprintf(tmpfname,"%s/%s.%d",component_opt->refdir,idx_prefix,c);
+			if( (tmpfp = fopen(tmpfname,"rb"))==NULL) err(errno,"get_species_abundance():%s",tmpfname);
+			stat(tmpfname, &tmpstat);
+			size_t *ref_index_combco = malloc(tmpstat.st_size);
+			fread(ref_index_combco,tmpstat.st_size, 1, tmpfp);
+			fclose(tmpfp);
+
+			//read qry sketch
+			sprintf(tmpfname,"%s/%s.%d",component_opt->qrydir,skch_prefix,c);		
+			if( (tmpfp = fopen(tmpfname,"rb"))==NULL) err(errno,"get_species_abundance():%s",tmpfname);
+			stat(tmpfname, &tmpstat);
+			unsigned int *qry_combco = malloc(tmpstat.st_size);
+			fread(qry_combco, tmpstat.st_size, 1, tmpfp);
+			fclose(tmpfp);
+			//read qry index
+    	sprintf(tmpfname,"%s/%s.%d",component_opt->qrydir,idx_prefix,c);
+    	if( (tmpfp = fopen(tmpfname,"rb"))==NULL) err(errno,"get_species_abundance():%s",tmpfname);
+    	stat(tmpfname, &tmpstat);
+    	size_t *qry_index_combco = malloc(tmpstat.st_size);
+    	fread(qry_index_combco,tmpstat.st_size, 1, tmpfp);
+    	fclose(tmpfp);
+			// read qry abundance
+			sprintf(tmpfname,"%s/%s.%d.a",component_opt->qrydir,skch_prefix,c);
+			if( (tmpfp = fopen(tmpfname,"rb"))==NULL) err(errno,"get_species_abundance():%s",tmpfname);
+			stat(tmpfname, &tmpstat);
+			unsigned short* qry_abund = malloc(tmpstat.st_size);
+			fread(qry_abund, tmpstat.st_size, 1, tmpfp);
+			fclose(tmpfp);
+			//for(int qn = 0; qn < qry_dstat.infile_num; qn++)  // for each query genome
+			// create dictionary from kmer to abundance index for each qry genome
+			int hash_sz = nextPrime( (int)((double)(qry_index_combco[qn+1] - qry_index_combco[qn]) / LD_FCTR) ); 
+			size_t *km2abund_idx = calloc( hash_sz, sizeof(size_t) ) ;
+			// make sure hash key >0 
+			for (size_t idx = qry_index_combco[qn] ; idx < qry_index_combco[qn+1]; idx++){
+				for(int i = 0; i< hash_sz; i++){
+					unsigned int tmphv = HASH(qry_combco[idx],i, hash_sz);
+					if(km2abund_idx[tmphv] == 0) {
+						km2abund_idx[tmphv] = idx + 1; // make stored key > 0 to tell the difference with empty slot
+						break;
+					}					
+				}
+			}			
+		printf("OK\n");	
+#pragma omp parallel for num_threads(component_opt->p) schedule(guided)
+			for(int rn = 0; rn < ref_dstat.infile_num; rn++) { // for each ref genome	
+				for( size_t ri = ref_index_combco[rn]; ri < ref_index_combco[rn+1]; ri++){
+
+					for (int i = 0; i< hash_sz; i++) {
+						unsigned int hv = HASH(ref_combco[ri],i, hash_sz);
+						if(km2abund_idx[hv] == 0) break;
+						else if( qry_combco[km2abund_idx[hv] - 1] == ref_combco[ri] ){
+							ref_abund[rn][0]++; //count how many kmer matched
+							ref_abund[rn][ref_abund[rn][0]] = qry_abund[km2abund_idx[hv] - 1];
+
+							if (ref_abund[rn][0] % REALLOC_US == REALLOC_US - 1) {
+            		int newsize = ( (ref_abund[rn][0] / REALLOC_US) + 2 ) * REALLOC_US  ;
+            		ref_abund[rn] = (int*)realloc( ref_abund[rn] , newsize * sizeof(int) );
+							}
+							break;
+						}
+					}
+				}		
+			}
+			free(km2abund_idx);
+			free(ref_combco);
+			free(ref_index_combco);
+	  	free(qry_combco);
+    	free(qry_index_combco);
+			free(qry_abund);
+
+		}// for c
+
+		// sort ref_abund
+#define MIN_KM_S 10 // minimal kmer share for a ref genome		
+		int *sort_ref = malloc(ref_dstat.infile_num* sizeof(int));
+  	for(int i = 0; i< ref_dstat.infile_num; i++) sort_ref[i] = i;		
+		qsort(sort_ref, ref_dstat.infile_num, sizeof(sort_ref[0]), comparator_idx);		
+
+		for ( int i = 0; i< ref_dstat.infile_num; i++ ){
+			int kmer_num = ref_abund[sort_ref[i]][0]; // overlapped kmer_num 
+			if (kmer_num < MIN_KM_S) break; 						
+			qsort(ref_abund[sort_ref[i]] + 1, kmer_num, sizeof(int),comparator);
+			int sum = 0;
+			for(int n = 1; n <= kmer_num; n++) sum+= ref_abund[sort_ref[i]][n];
+
+			int median_idx = (kmer_num + 1)/2;
+			int pct09_idx = (kmer_num + 1) * 0.9 ;
+
+			printf("%s\t%s\t%d\t%f\t%d\t%d\n",qryname[qn],refname[sort_ref[i]], kmer_num, (float)sum/kmer_num,
+			 ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][pct09_idx]);
+		}		
+
+		free(sort_ref);
+		
+	}// for qry
+
+	for (int i = 0; i < ref_dstat.infile_num; i++) free(ref_abund[i]);
+  free(ref_abund) ;
+  
+	free(refname);	
+	free(qryname);
+	return 1;
+}
+
+
+
+int comparator_idx (const void *a, const void *b){
+	return ( ref_abund[*(int*)b][0] - ref_abund[*(int*)a][0] );		
+}
+
+
+int comparator (const void *a, const void *b){
+  return ( *(int*)a - *(int*)b );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

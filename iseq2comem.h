@@ -3,8 +3,8 @@
 #include "global_basic.h"
 #define READSEQ_BUFFSZ 65536 
 //for koc file //kmer occrence
-#define OCCRC_BIT 24 // make sure it is 64 bits machine
-#define OCCRC_MAX 0xffffffLLU //must be 1<<OCCRC_BIT - 1
+#define OCCRC_BIT 16 //24 // make sure it is 64 bits machine
+#define OCCRC_MAX 0xffffLLU // 0xffffffLLU //must be 1<<OCCRC_BIT - 1
 
 extern void seq2co_global_var_initial(void);
 
@@ -18,6 +18,8 @@ llong write_fqco2file(char* cofilename, llong *co);
 llong wrt_co2cmpn_use_inn_subctx(char* cofilename, llong *co);
 llong writeco2file(char* cofilename, llong *co);
 llong write_fqkoc2file(char* cofilename, llong *co);
+unsigned int write_fqkoc2files(char* cofilename, llong *co);
+
 int reads2mco(char* seqfname,const char *co_dir, char * pipecmd);
 
 #endif

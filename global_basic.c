@@ -450,4 +450,28 @@ llong find_lgst_primer_2pow(int w)
 }
 
 
+int nextPrime(int n){
+    int j;
+    int tag = 0;
+
+    while (1){
+        for(j=2;j<=(int)sqrt(n);j++){
+            if(n%j == 0){
+                tag = 1;
+                break;
+            }
+        }
+        if(tag == 1){
+            if(n == 0x7FFFFFFF){
+                printf("[ERROR] n exceed 0x7FFFFFFF, Can't find a valid prime\n");
+                exit(1);
+            }
+            n++;
+            tag = 0;
+        }else{
+            return n;
+        }
+    }
+}
+
 

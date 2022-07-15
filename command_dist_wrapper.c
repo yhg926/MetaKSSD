@@ -46,7 +46,7 @@ static struct argp_option opt_dist[] =
 	{"metric",'M',"0/1",0,"output metrics: 0: Jaccard/1: Containment [0]\v"},
 	{"outfields",'O',"0/1/2",0,"output fields(latter includes former): Distance/Q-values/Confidence Intervels.[2]\v"},
 	{"correction",333,"0/1",0,"perform correction for shared k-mer counts or not .[0]\v" },
-//{"abundance",'A',0,0,"abundance estimate mode.\v"},
+  {"abundance",'A',0,0,"abundance estimate mode.\v"},
 	{"keepcofile",888,0,0,"keep intermedia .co files.\v"},
 	{"pipecmd",'P',"<cmd>",0,"pipe command.\v"},
 	{"keepskf",777,0,0,"turn on share_kmer_ct file keep mode.[false]\v"},

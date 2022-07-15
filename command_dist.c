@@ -32,11 +32,11 @@ static llint real_time_mem;
 const char co_dstat[] = "cofiles.stat"; //stat file name in co dir 
 const char mco_dstat[] = "mcofiles.stat";
 const char distoutdir[] = "dist";
-const char logfpath[] = "dist_log.out";
-FILE *logfp;
+//const char logfpath[] = "dist_log.out";
+//FILE *logfp;
 //distance compute type and core fun
 typedef int mco_co_dist_t[BIN_SZ];
-typedef unsigned int ctx_obj_ct_t; 
+//typedef unsigned int ctx_obj_ct_t; 
 static inline unsigned int * mco_co_mmpdist_core(gidobj_t** unit_arrmco, char *co_fcode_in, unsigned int *ctx_obj_ct_in );
 static inline void mco_co_dist_core(gidobj_t** unit_arrmco, char *co_fcode_in, int bin_sz, mco_co_dist_t shared_ctx_num_in);
 //#define LINE_LEN 1024 // limit of output line length, make sure each line ouput length < LINE_LEN
@@ -48,13 +48,13 @@ static inline void output_ctrl (unsigned int X_size, unsigned int XnY_size, prin
 /* dispatch functions  */
 int dist_dispatch(dist_opt_val_t *opt_val) 
 {
-	logfp = fpathopen(opt_val->outdir, logfpath,"a") ;	
+	//logfp = fpathopen(opt_val->outdir, logfpath,"a") ;	
 	// get available mem. from pre-set or system(if no pre-set)
 	if( opt_val->mmry == 0 )
 		opt_val->mmry = get_sys_mmry();
 	llint base_mem = (llint)( (opt_val->mmry - get_sys_mmry()) * BBILLION ) - mem_usage_stat.others ;	
 	real_time_mem = base_mem + (llint)(get_sys_mmry()*BBILLION) ; 
-	fprintf(logfp,"availbe mem.=%lf\treal time mem.=%llu\n", get_sys_mmry(), real_time_mem);	
+	//fprintf(logfp,"availbe mem.=%lf\treal time mem.=%llu\n", get_sys_mmry(), real_time_mem);	
 	
 	int p_fit_mem = 1;	
 	/***** invoke database search mode: *********/
@@ -75,10 +75,11 @@ int dist_dispatch(dist_opt_val_t *opt_val)
 				err(errno,"not a valid input files: make sure input files are .fas/.fq format" 
 					"or .co.num |.mco.num files with %s | %s in %s \n", co_dstat, mco_dstat, opt_val->refpath );
 
-			//const char *dist_rslt_dir = mk_dist_rslt_dir(opt_val->outdir,"kssd_dist_rslt");
-			const char *dist_rslt_dir = opt_val->outdir;
-      const char *dist_refco_dir = mk_dist_rslt_dir(dist_rslt_dir,"qry"); //"ref_co"
-
+			//const char *dist_rslt_dir = opt_val->outdir;
+      //const char *dist_refco_dir = mk_dist_rslt_dir(dist_rslt_dir,"qry"); //"ref_co"
+			const char *dist_refco_dir = opt_val->outdir;
+			mkdir(dist_refco_dir,0777);	
+		
 			int *shuffled_refname_ind = shuffleN( ref_stat->infile_num, 0 );
 			mem_usage_stat.input_file_name_sz = ref_stat->infile_num * ( sizeof(llong) + PATHLEN*sizeof(char) );
 real_time_mem -=  mem_usage_stat.input_file_name_sz;			
@@ -104,11 +105,10 @@ real_time_mem -= mem_usage_stat.shuffled_subctx_arr_sz;
 			size_t phash_mem = (llong)p_fit_mem * (hashsize + 1) * sizeof(llong);
 
 real_time_mem -= phash_mem;			
-      fprintf(logfp, "COMPONENT_SZ=%d\tcompnum=%d\t.fas:%d\t.fq:%d\tall:%d\nthreadnum:%d\tp hash mem. %lu\n",
-        COMPONENT_SZ,component_num,ref_fmt_count->fasta,ref_fmt_count->fastq,ref_stat->infile_num,p_fit_mem,phash_mem);
+      //fprintf(logfp, "COMPONENT_SZ=%d\tcompnum=%d\t.fas:%d\t.fq:%d\tall:%d\nthreadnum:%d\tp hash mem. %lu\n", COMPONENT_SZ,component_num,ref_fmt_count->fasta,ref_fmt_count->fastq,ref_stat->infile_num,p_fit_mem,phash_mem);
 
-			if(ref_fmt_count->fastq >0 )
-     		fprintf(logfp,"quality filter=%d\tKmer Occrence filter=%d\n",opt_val->kmerqlty,opt_val->kmerocrs);
+			//if(ref_fmt_count->fastq >0 )
+     	//	fprintf(logfp,"quality filter=%d\tKmer Occrence filter=%d\n",opt_val->kmerqlty,opt_val->kmerocrs);
 
 			//run stage I and II
 			opt_val->abundance = false; //disable abundance mode in ref input 
@@ -205,10 +205,11 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 				// if is valid raw seq format		
         if(is_valid_fas_fq_in || (opt_val->pipecmd[0] != '\0') ){ //convert .fas .fq to co
 
-      		//const char * dist_rslt_dir = mk_dist_rslt_dir(opt_val->outdir,"kssd_dist_rslt"); 
-					const char * dist_rslt_dir = opt_val->outdir;
-      		const char *dist_co_dir = mk_dist_rslt_dir(dist_rslt_dir,"qry"); // "co"
-					
+					//const char * dist_rslt_dir = opt_val->outdir;
+      		//const char *dist_co_dir = mk_dist_rslt_dir(dist_rslt_dir,"qry"); // "co"
+          const char *dist_co_dir = opt_val->outdir; 	
+					mkdir(dist_co_dir,0777);
+
 					int *shuffled_refname_ind = shuffleN( infile_stat->infile_num, 0 );
 					mem_usage_stat.input_file_name_sz = infile_stat->infile_num * ( sizeof(llong) + PATHLEN*sizeof(char) );
 
@@ -234,11 +235,9 @@ real_time_mem -= mem_usage_stat.shuffled_subctx_arr_sz;
 
 real_time_mem -= phash_mem ;
 
-					fprintf(logfp,".fas:%d\t.fq:%d\tall:%d\nthreadnum:%d\tp hash mem. %lu\n",
-        		qry_fmt_count->fasta,qry_fmt_count->fastq, infile_stat->infile_num,p_fit_mem,phash_mem);
+					//fprintf(logfp,".fas:%d\t.fq:%d\tall:%d\nthreadnum:%d\tp hash mem. %lu\n",qry_fmt_count->fasta,qry_fmt_count->fastq, infile_stat->infile_num,p_fit_mem,phash_mem);
 
-					if(qry_fmt_count->fastq >0 )
-						fprintf(logfp,"quality filter=%d\tKmer Occrence filter=%d\n",opt_val->kmerqlty,opt_val->kmerocrs);	
+					//if(qry_fmt_count->fastq >0 ) fprintf(logfp,"quality filter=%d\tKmer Occrence filter=%d\n",opt_val->kmerqlty,opt_val->kmerocrs);	
 					
       		run_stageI(opt_val,infile_stat,shuffled_refname_ind,dist_co_dir,p_fit_mem);
         }
@@ -248,7 +247,7 @@ real_time_mem -= phash_mem ;
 
 	}// if has query end
 
-	fclose(logfp);
+	//fclose(logfp);
 	return 0;
 }; // dispatch() end
 
@@ -260,7 +259,7 @@ dim_shuffle_t *get_dim_shuffle( dist_opt_val_t *opt_val_in )
 
   if( strcmp( shuf_infile_name, "" ) == 0 )
   {
-    fprintf(logfp,"addLen=%d\tsubctxlen=%d\n",add_len_drlevel2subk(),add_len_drlevel2subk() + opt_val_in->dr_level);
+    //fprintf(logfp,"addLen=%d\tsubctxlen=%d\n",add_len_drlevel2subk(),add_len_drlevel2subk() + opt_val_in->dr_level);
     srand ( time(NULL) );
     dim_shuffle_stat_t dim_shuffle_stat =
     {
@@ -276,7 +275,7 @@ dim_shuffle_t *get_dim_shuffle( dist_opt_val_t *opt_val_in )
 
 		sprintf(shuf_infile_name_prefix, "%s/default",opt_val_in->outdir);	
     write_dim_shuffle_file( &dim_shuffle_stat,shuf_infile_name_prefix); //"default"
-		fprintf(logfp,"subcontext shuffled dimension file: %s.shuf created\n",shuf_infile_name_prefix);
+		//fprintf(logfp,"subcontext shuffled dimension file: %s.shuf created\n",shuf_infile_name_prefix);
     sprintf(shuf_infile_name,"%s.shuf",shuf_infile_name_prefix);
   };
   return read_dim_shuffle_file(shuf_infile_name);
@@ -284,7 +283,7 @@ dim_shuffle_t *get_dim_shuffle( dist_opt_val_t *opt_val_in )
 
 int get_hashsz(dim_shuffle_t *dim_shuffle_in )
 {
-	int dim_reduce_rate = 1 << 4*dim_shuffle_in->dim_shuffle_stat.drlevel;
+	//int dim_reduce_rate = 1 << 4*dim_shuffle_in->dim_shuffle_stat.drlevel;
 	llong ctx_space_sz = 1LLU << 4*( dim_shuffle_in->dim_shuffle_stat.k - dim_shuffle_in->dim_shuffle_stat.drlevel );
   int primer_ind = 4*( dim_shuffle_in->dim_shuffle_stat.k - dim_shuffle_in->dim_shuffle_stat.drlevel ) - CTX_SPC_USE_L - 7;
   // check primer_ind
@@ -302,14 +301,14 @@ int get_hashsz(dim_shuffle_t *dim_shuffle_in )
        (double)1/(1 << CTX_SPC_USE_L),dim_shuffle_in->dim_shuffle_stat.k + k_add );
   };
   int hashsize_get = primer[primer_ind];
-  fprintf(logfp,"dimension reduced %d\n"
+  /*fprintf(logfp,"dimension reduced %d\n"
           "ctx_space size=%llu\n"
           "k=%d\n"
           "drlevel=%d\n"
           "primer_ind=%d\n"
           "hashsize=%u\n",
     dim_reduce_rate,ctx_space_sz,dim_shuffle_in->dim_shuffle_stat.k, dim_shuffle_in->dim_shuffle_stat.drlevel, primer_ind, hashsize_get);
-
+*/
 	return hashsize_get ;
 }
 
@@ -349,71 +348,6 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 	llong all_ctx_ct = 0 ;
 	ctx_obj_ct_t *ctx_ct_list = malloc(sizeof(ctx_obj_ct_t) * seqfile_stat->infile_num);
 
-	if(opt_val->abundance){ // abundance mode
-			
-#pragma omp parallel for num_threads(p_fit_mem) reduction(+:all_ctx_ct) schedule(guided)
-  	for(int i = 0; i< seqfile_stat->infile_num; i++){
-			int tid = 0;
-#ifdef _OPENMP
-      tid = omp_get_thread_num();
-#endif
-      char* seqfname = seqfile_stat->organized_infile_tab[ shuffled_seqfname_ind[i] ].fpath;
-			char cofname[PATHLEN];
-				
-			sprintf(cofname,"%s/%d.koc",co_dir,i);
-			printf("decomposing %s\n",seqfname) ;
-
-			llong *co;
-			if(isOK_fmt_infile(seqfname,fastq_fmt,FQ_FMT_SZ)){
-				co = fastq2koc(seqfname,CO[tid],opt_val->pipecmd, opt_val->kmerqlty);
-				ctx_ct_list[i] = write_fqkoc2file(cofname,co);
-			}
-			else{
-				err(errno,"run_stageI(): only .fastq format is allowed in abundance estimate mode");
-			} 
-			all_ctx_ct += ctx_ct_list[i] ;
-   	}// end all bin loop
-
-		/*****combining all *.koc.i into comb.koc.i *****/
-#pragma omp parallel for num_threads(p_fit_mem) schedule(guided)
-   for(int c = 0; c < component_num; c++){
-        //get cth fsize by cof_index_in_cbdco[j+1] - cof_index_in_cbdco[j]
-   	size_t *cof_index_in_cbdco = malloc( (seqfile_stat->infile_num + 1) * sizeof(size_t) );
-    char indexfname[PATHLEN]; char combined_cof[PATHLEN]; char cofname[PATHLEN];
-    FILE *com_cofp,*indexfp;
-    sprintf(combined_cof,"%s/combco.%d",co_dir,c);
-    sprintf(indexfname,"%s/combco.index.%d",co_dir,c);
-    if( (com_cofp = fopen(combined_cof,"wb")) == NULL) err(errno,"%s",combined_cof);
-    if( (indexfp = fopen(indexfname,"wb")) == NULL) err(errno,"%s",indexfname);
-
-    llong *tmpco = malloc( sizeof(llong) * (1 << (4*COMPONENT_SZ - CTX_SPC_USE_L)) );
-    struct stat cof_stat;
-    FILE *cofp;
-    cof_index_in_cbdco[0] = 0; //first offset initial to 0
-
-    for(int i = 0; i< seqfile_stat->infile_num; i++){
-
-    	sprintf(cofname,"%s/%d.koc.%d", co_dir,i,c);
-      if( (cofp = fopen(cofname,"rb")) == NULL) err(errno,"%s",cofname);
-      	stat(cofname,&cof_stat);
-
-      int tmpkmerct = cof_stat.st_size / sizeof(llong);
-      cof_index_in_cbdco[i+1] = (size_t)cof_index_in_cbdco[i] + tmpkmerct;
-
-      fread(tmpco,sizeof(llong),tmpkmerct,cofp);
-      fwrite(tmpco,sizeof(llong),tmpkmerct,com_cofp);
-
-      fclose(cofp);
-      remove(cofname);
-    }
-    fclose(com_cofp);
-
-    fwrite(cof_index_in_cbdco,sizeof(size_t), seqfile_stat->infile_num + 1, indexfp);
-    fclose(indexfp);
-    free(cof_index_in_cbdco);
-   }	
-
-	}
 	//20200423 new feature: sketch by reads
 	if(opt_val->byread){
 		for(int i = 0; i< seqfile_stat->infile_num; i++){
@@ -422,8 +356,7 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 			reads2mco(seqfname, co_dir, opt_val->pipecmd);
 		}
 	}
-	else { // normal mode
-
+	else {  // normal or abundance mode 20220707
 #pragma omp parallel for num_threads(p_fit_mem) reduction(+:all_ctx_ct) schedule(guided)
   	for(int i = 0; i< seqfile_stat->infile_num; i++){
 
@@ -440,8 +373,14 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
       llong *co;
 			//20190910 caution!!!: assume pipecmd generated fastq format to pipe 
       if(isOK_fmt_infile(seqfname,fastq_fmt,FQ_FMT_SZ) || opt_val->pipecmd[0]!='\0'){
-				co = fastq2co(seqfname,CO[tid],opt_val->pipecmd,opt_val->kmerqlty,opt_val->kmerocrs);
-        ctx_ct_list[i] = write_fqco2file(cofname,co);
+				if(opt_val->abundance){
+						co = fastq2koc(seqfname,CO[tid],opt_val->pipecmd, opt_val->kmerqlty);
+						ctx_ct_list[i] = write_fqkoc2files(cofname,co); //write_fqkoc2file(cofname,co);
+				}
+				else{ 
+					co = fastq2co(seqfname,CO[tid],opt_val->pipecmd,opt_val->kmerqlty,opt_val->kmerocrs);
+        	ctx_ct_list[i] = write_fqco2file(cofname,co);
+				}	
        }
        else{
 			 	co = fasta2co(seqfname,CO[tid],opt_val->pipecmd);
@@ -451,48 +390,74 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 			all_ctx_ct += ctx_ct_list[i] ;	
 		}
 
+
 /*****combining all *.co.i into comb.co.i *****/
 #pragma omp parallel for num_threads(p_fit_mem) schedule(guided)
     for(int c = 0; c < component_num; c++){
      	//get cth fsize by cof_index_in_cbdco[j+1] - cof_index_in_cbdco[j]
 			size_t *cof_index_in_cbdco = malloc( (seqfile_stat->infile_num + 1) * sizeof(size_t) );
-      char indexfname[PATHLEN]; char combined_cof[PATHLEN]; char cofname[PATHLEN];
-      FILE *com_cofp,*indexfp;
-    	sprintf(combined_cof,"%s/combco.%d",co_dir,c);
-      sprintf(indexfname,"%s/combco.index.%d",co_dir,c);
-      if( (com_cofp = fopen(combined_cof,"wb")) == NULL) err(errno,"%s",combined_cof);
-      if( (indexfp = fopen(indexfname,"wb")) == NULL) err(errno,"%s",indexfname);
+      char tmpfname[PATHLEN]; //indexfname[PATHLEN]; char combined_cof[PATHLEN]; char combined_abundf[PATHLEN]; char cofname[PATHLEN];
+ 
+      FILE *com_cofp,*indexfp, *com_abund_fp; 
+    	sprintf(tmpfname,"%s/%s.%d",co_dir,skch_prefix,c);
+			if( (com_cofp = fopen(tmpfname,"wb")) == NULL) err(errno,"%s",tmpfname);
 
-      unsigned int *tmpco = malloc( sizeof(unsigned int) * (1 << (4*COMPONENT_SZ - CTX_SPC_USE_L)) );
-      struct stat cof_stat;
+	
+      sprintf(tmpfname,"%s/%s.%d",co_dir,idx_prefix,c);			
+      if( (indexfp = fopen(tmpfname,"wb")) == NULL) err(errno,"%s",tmpfname);
 
-      FILE *cofp;
+			if(opt_val->abundance) {
+				sprintf(tmpfname,"%s/%s.%d.a",co_dir,skch_prefix,c);
+				com_abund_fp = fopen(tmpfname,"wb");
+				if( com_abund_fp == NULL) err(errno,"%s",tmpfname);
+			}
+
+      void *tmp_mem = malloc( sizeof(unsigned int) * (1 << (4*COMPONENT_SZ - CTX_SPC_USE_L)) );
+//		unsigned short *tmpabund = malloc( sizeof(unsigned short) * (1 << (4*COMPONENT_SZ - CTX_SPC_USE_L)) );
+
+      struct stat tmpstat;
+ 
+      FILE *tmpfp;
       cof_index_in_cbdco[0] = 0; //first offset initial to 0
 
       for(int i = 0; i< seqfile_stat->infile_num; i++){
 
-      	sprintf(cofname,"%s/%d.co.%d", co_dir, i, c);
-        if( (cofp = fopen(cofname,"rb")) == NULL) err(errno,"%s",cofname);
-          stat(cofname,&cof_stat);
+      	sprintf(tmpfname,"%s/%d.co.%d", co_dir, i, c);
+        if( (tmpfp = fopen(tmpfname,"rb")) == NULL) err(errno,"%s",tmpfname);
+        stat(tmpfname,&tmpstat);
 
-        int tmpkmerct = cof_stat.st_size/sizeof(unsigned int);
+        int tmpkmerct = tmpstat.st_size/sizeof(unsigned int);
         cof_index_in_cbdco[i+1] = (size_t)cof_index_in_cbdco[i] + tmpkmerct;
-        fread(tmpco,sizeof(unsigned int),tmpkmerct,cofp);
-        fwrite(tmpco,sizeof(unsigned int),tmpkmerct,com_cofp);
 
-        fclose(cofp);
-        remove(cofname);
+        fread(tmp_mem,tmpstat.st_size,1,tmpfp);
+        fwrite(tmp_mem,tmpstat.st_size,1,com_cofp);
+        fclose(tmpfp);
+        remove(tmpfname);
+
+				if(opt_val->abundance) {
+					sprintf(tmpfname,"%s/%d.co.%d.a", co_dir, i, c);
+					if( (tmpfp = fopen(tmpfname,"rb")) == NULL) err(errno,"%s",tmpfname);
+					
+					fread(tmp_mem, sizeof(unsigned short)*tmpkmerct, 1 , tmpfp);	
+					fwrite(tmp_mem, sizeof(unsigned short)*tmpkmerct, 1 , com_abund_fp );
+					fclose(tmpfp);
+					remove(tmpfname);
+				}
+					
       }
       fclose(com_cofp);
 			
-			free(tmpco);
+			if(opt_val->abundance) fclose(com_abund_fp) ;
+
+			free(tmp_mem);
+
       fwrite(cof_index_in_cbdco,sizeof(size_t), seqfile_stat->infile_num + 1, indexfp);
       fclose(indexfp);
       free(cof_index_in_cbdco);
-    }
-		
 
-	}
+    } // component loop
+		
+	} // else normal or abund mode end
 			// free **CO		
   for(int i = 0; i< p_fit_mem; i++ ) free(CO[i]);
   free(CO);
@@ -578,7 +543,7 @@ static ctx_obj_ct_t initial_dist[BIN_SZ];
 static int ref_seq_num,qry_seq_num,kmerlen,dim_reduct_len ;
 void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir, int p_fit_mem)
 {
-	fprintf(logfp,"run mco_co_dist(), %d threads used\n",p_fit_mem);
+	//fprintf(logfp,"run mco_co_dist(), %d threads used\n",p_fit_mem);
 //	printf("run mco_co_dist(), %d threads used\n",p_fit_mem);
 	FILE *refmco_dstat_fp, *qryco_dstat_fp;
 	char *refmco_dstat_fpath = malloc(PATHLEN*sizeof(char));	
@@ -644,7 +609,7 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
 			fwrite(initial_dist, sizeof(ctx_obj_ct_t), binsz, distfp);				
 			fclose(distfp);
 		}
-		fprintf(logfp,"all %d co files' distance file initialized\n",co_dstat_readin.infile_num);		
+		//fprintf(logfp,"all %d co files' distance file initialized\n",co_dstat_readin.infile_num);		
 
 		for ( int j = 0; j < mco_dstat_readin.comp_num; j++ ){
 
@@ -691,8 +656,8 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
   dim_reduct_len = co_dstat_readin.dim_rd_len;
 	char distf[PATHLEN];
 	sprintf(distf, "%s/distance.out", distout_dir);
-	fprintf(logfp,"distance output to : %s\n",distf);
-	printf("distance output to : %s\n",distf);
+	//fprintf(logfp,"distance output to : %s\n",distf);
+	//printf("distance output to : %s\n",distf);
 	FILE *distfp;
 	if( (distfp = fopen(distf,"a")) == NULL ) err(errno,"mco_co_dist():%s",distf);
 	for(int i=0; i<=ref_bin_num;i++ ){
@@ -719,7 +684,7 @@ void mco_cbd_co_dist(dist_opt_val_t *opt_val_in)
 	const char *distout_dir = opt_val_in->outdir;	
 	//int neighbor_num = opt_val_in->num_neigb ;
   //double mutdistance_thre = opt_val_in->mut_dist_max ;	
-	fprintf(logfp,"run mco_cbd_co_dist(), %d threads used\n",p_fit_mem);
+	//fprintf(logfp,"run mco_cbd_co_dist(), %d threads used\n",p_fit_mem);
   printf("run mco_cbd_co_dist(), %fG memory used\t%d threads used\n",opt_val_in->mmry,p_fit_mem);
   FILE *refmco_dstat_fp, *qryco_dstat_fp;
   char *refmco_dstat_fpath = malloc(PATHLEN*sizeof(char));
@@ -907,11 +872,11 @@ void mco_cbd_co_dist(dist_opt_val_t *opt_val_in)
   qry_seq_num = co_dstat_readin.infile_num ;
   kmerlen = co_dstat_readin.kmerlen;
   dim_reduct_len = co_dstat_readin.dim_rd_len;
-  char distf[PATHLEN];
-  sprintf(distf, "%s/distance.out", distout_dir);
+  //char distf[PATHLEN];
+  //sprintf(distf, "%s/distance.out", distout_dir);
 	
-  fprintf(logfp,"distance output to : %s\n",distf);
-  printf("distance output to : %s\n",distf);
+  //fprintf(logfp,"distance output to : %s\n",distf);
+  //printf("distance output to : %s\n",distf);
 	dist_print_nobin(distout_dir,ref_seq_num, qry_seq_num, ref_ctx_ct_list, qry_ctx_ct_list,num_cof_batch,mcofname, cofname, opt_val_in);
 
   free(ref_ctx_ct_list);
@@ -932,7 +897,8 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in) // currently used v
   char *refmco_dname = opt_val_in->refpath;
   char *qryco_dname = opt_val_in->remaining_args[0];
   const char *distout_dir = opt_val_in->outdir;
-  fprintf(logfp,"mco_cbd_compatible_dist(): %d threads used\n",p_fit_mem);
+	mkdir(distout_dir,0700);
+  //fprintf(logfp,"mco_cbd_compatible_dist(): %d threads used\n",p_fit_mem);
 //  printf("run mco_cbd_koc_compatible_dist(), %fG memory used\t%d threads used\n",opt_val_in->mmry,p_fit_mem);
   FILE *refmco_dstat_fp, *qryco_dstat_fp;
   char *refmco_dstat_fpath = malloc(PATHLEN*sizeof(char));
@@ -1011,8 +977,10 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in) // currently used v
  	char distf[PATHLEN];
   sprintf(distf, "%s/distance.out", distout_dir);
 
-	// koc compatible condition
-	if(co_dstat_readin.koc){
+	// old koc compatible condition
+	//20220715: new kssd version (v2.0) use .a file as addtional abundance, keeping combco.* file unchanged
+	co_dstat_readin.koc = 0; // 20220715: do not use old koc_dist_t mode 
+	if(co_dstat_readin.koc){ //2022new kssd version (v2.0) use .a file as addtional abundance, keeping combco.* file unchanged
 	  size_t disf_sz = (size_t)mco_dstat_readin.infile_num*co_dstat_readin.infile_num*sizeof(koc_dist_t) ;
   	if(ftruncate(dist_bfp, disf_sz) == -1) err(errno,"mco_cbd_koc_dist()::ftruncate");
   	close(dist_bfp);
@@ -1106,8 +1074,8 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in) // currently used v
     	munmap(ctx_obj_ct + (size_t)b*num_cof_batch*mco_dstat_readin.infile_num,  maplength);
   	} // batch loop end
   	free(fco_pos);
-  	fprintf(logfp,"distance output to : %s\n",distf);
-  	printf("distance output to : %s\n",distf);
+  	//fprintf(logfp,"distance output to : %s\n",distf);
+  	//printf("distance output to : %s\n",distf);
 		koc_dist_print_nobin(distout_dir,ref_seq_num, qry_seq_num, ref_ctx_ct_list, qry_ctx_ct_list,num_cof_batch,mcofname, cofname);
 	}// koc mode end
 
@@ -1209,8 +1177,8 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in) // currently used v
       munmap(ctx_obj_ct + (size_t)b*num_cof_batch*mco_dstat_readin.infile_num,  maplength);
     } // batch loop end
     free(fco_pos);
-    fprintf(logfp,"distance output to : %s\n",distf);
-    printf("distance output to : %s\n",distf);
+    //fprintf(logfp,"distance output to : %s\n",distf);
+    //printf("distance output to : %s\n",distf);
 
 		dist_print_nobin(distout_dir,ref_seq_num, qry_seq_num, ref_ctx_ct_list, qry_ctx_ct_list,num_cof_batch,mcofname, cofname,opt_val_in);
 
