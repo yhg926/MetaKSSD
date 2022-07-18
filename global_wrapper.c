@@ -5,7 +5,7 @@
 #include "command_dist_wrapper.h" //#include "command_align_wrapper.h"
 #include "command_set.h"
 #include "command_reverse.h"
-#include "command_component.h"
+#include "command_composite.h"
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -60,7 +60,7 @@ static char doc_global[] =
 			"  reverse	reverse kssd sketch to k-mer set.\n"
 
 "\n"
-      "  component  metagenomics components analysis.\n"
+      "  composite	metagenomics composition analysis.\n"
 
 "\n"
 ;
@@ -90,8 +90,8 @@ static error_t parse_global(int key, char* arg, struct argp_state* state)
 			}
 			else if(strcmp(arg, "reverse") == 0)
 				cmd_reverse(state);
-			else if(strcmp(arg, "component") == 0)	
-				cmd_component(state);		
+			else if(strcmp(arg, "composite") == 0)	
+				cmd_composite(state);		
 			else if(strcmp(arg, "primer") == 0)
 					for(int i = 8;i<52;i++ )
 				 		printf("%llu\n",find_lgst_primer_2pow(i));
