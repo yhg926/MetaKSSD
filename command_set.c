@@ -326,7 +326,10 @@ int sketch_operate()
 		memset(dict,0,comp_sz/8);
 		//struct stat s;
 		sprintf(tmppath,"%s/%s.%d",set_opt.pansketchpath, pan_prefix, c);	
-    if(stat(tmppath, &s) != 0)  err(errno,"sketch_operate():%s",tmppath);
+    if(stat(tmppath, &s) != 0){//20220718: also consider uniq_pan_prefix 
+			sprintf(tmppath,"%s/%s.%d",set_opt.pansketchpath, uniq_pan_prefix, c);
+			if(stat(tmppath, &s) != 0) err(errno,"sketch_operate():%s",tmppath);
+		}
     size_t size = s.st_size / sizeof(unsigned int);
 		if( ( co_stat_fp = fopen(tmppath,"rb")) == NULL ) err(errno,"sketch_operate():%s",tmppath);		
 		// index pan co
