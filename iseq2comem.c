@@ -312,7 +312,7 @@ llong * fasta2co(char* seqfname, llong *co, char * pipecmd) //20190910, enhancem
 // macro for fastq2co
 // Q:quality score, M: required least occurence of kmer
 // make sure LEN is enough for long read
-#define LEN 4096 
+#define LEN 20000 //4096, 20220720 update for pacbio reads
 #define CT_BIT 4 //bits for Kmer count
 #define CT_MAX 0xfLLU //make sure smaller than 1LLU<<CT_BTI
 
@@ -331,18 +331,21 @@ llong * fastq2co(char* seqfname, llong *co, char *pipecmd, int Q, int M ) //2019
     sprintf(fq_fname,"%s %s",gzpipe_cmd,seqfname);
 
 	if( (infp=popen(fq_fname,"r")) == NULL ) err(errno,"fastq2co():%s",fq_fname);
-	char seq[LEN];
-	char qual[LEN];
-
+	//char seq[LEN];
+	//char qual[LEN];
+	char *seq = malloc(LEN+10);
+	char *qual = malloc(LEN+10);
 	fgets(seq,LEN,infp); fgets(seq,LEN,infp); 
 	fgets(qual,LEN,infp);  fgets(qual,LEN,infp);
 //	if(Q != -1) { 		};
 	llong base = 1; char ch ; int basenum,line_num = 0 ;
 	unsigned int keycount =0 ;
-	for(int pos = 0; pos < strlen(seq); pos++){
+	int sl = strlen(seq); 
+	for(int pos = 0; pos < sl; pos++){
 		if(seq[pos] == '\n' ){
 			fgets(seq,LEN,infp); fgets(seq,LEN,infp);
 			fgets(qual,LEN,infp); fgets(qual,LEN,infp);
+			sl = strlen(seq);
 //			printf("seq=%s\nqual=%s\n==\n",seq,qual); 
 			line_num+=4;
 			if( !feof(infp) ) {
@@ -403,7 +406,11 @@ llong * fastq2co(char* seqfname, llong *co, char *pipecmd, int Q, int M ) //2019
 			}; //end kmer hashing
 		};
 	}// end file hashing 
+	printf("%d reads detected\n",line_num);
+
 	pclose(infp);
+	free(seq);
+  free(qual);
 	return co;
 }; // end fastq2co()
 
@@ -427,18 +434,22 @@ llong * fastq2koc (char* seqfname, llong *co, char *pipecmd, int Q)
 
   if( (infp=popen(fq_fname,"r")) == NULL ) err(errno,"fastq2koc():%s",fq_fname);
 
-  char seq[LEN];
-  char qual[LEN];
+  //char seq[LEN];
+  //char qual[LEN];
+	char *seq = malloc(LEN+10);
+  char *qual = malloc(LEN+10);
 
   fgets(seq,LEN,infp); fgets(seq,LEN,infp);
   fgets(qual,LEN,infp);  fgets(qual,LEN,infp);
 
   llong base = 1; char ch ; int basenum,line_num = 0 ;
   unsigned int keycount =0 ;
-  for(int pos = 0; pos < strlen(seq); pos++){
+	int sl = strlen(seq); //20220720: old code put strlen(seq) in loop largely reduce the speed 
+  for(int pos = 0; pos < sl; pos++){
     if(seq[pos] == '\n' ){
       fgets(seq,LEN,infp); fgets(seq,LEN,infp);
       fgets(qual,LEN,infp); fgets(qual,LEN,infp);
+			sl = strlen(seq);
       line_num+=4;
       if( !feof(infp) ) {
         base = 1;
@@ -493,6 +504,8 @@ llong * fastq2koc (char* seqfname, llong *co, char *pipecmd, int Q)
     };
   }// end file hashing
   pclose(infp);
+	free(seq);
+	free(qual);
   return co;
 }; // end fastq2koc();
 

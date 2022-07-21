@@ -37,7 +37,7 @@ static struct argp_option opt_dist[] =
 	{"DimRdcLevel",'L',"INT",0,"Dimension Reduction Level or provide .shuf file[2]\v"},
 	{"maxMemory",'m',"NUM",0,"maximal memory (in G) usage allowed\v"},
 	{"LstKmerOcrs",'n',"INT",0,"Specify the Least Kmer occurence in fastq file\v"},
-	{"quality",'Q',"INT",0,"Filter Kmer with lowest base quality < q (Phred)\v"},
+	{"quality",'Q',"INT",0,"Filter Kmer with lowest base quality < q (Phred).[0]\v"},
 	{"reference_dir",'r',"<path>",0,"reference genome/database search against.\v"},
 //{"distance",'d',0,0,"caculate pairwise distance.\v"},
 	{"outdir",'o',"<path>",0,"folder path for results files.\v" },
