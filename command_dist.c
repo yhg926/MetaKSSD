@@ -412,7 +412,7 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 				if( com_abund_fp == NULL) err(errno,"%s",tmpfname);
 			}
 
-      void *tmp_mem = malloc( sizeof(unsigned int) * (1 << (4*COMPONENT_SZ - CTX_SPC_USE_L)) );
+      void *tmp_mem = malloc( LD_FCTR * 2 * (1 << (4*COMPONENT_SZ - CTX_SPC_USE_L)) *sizeof(unsigned int) );
 //		unsigned short *tmpabund = malloc( sizeof(unsigned short) * (1 << (4*COMPONENT_SZ - CTX_SPC_USE_L)) );
 
       struct stat tmpstat;
@@ -428,7 +428,6 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 
         int tmpkmerct = tmpstat.st_size/sizeof(unsigned int);
         cof_index_in_cbdco[i+1] = (size_t)cof_index_in_cbdco[i] + tmpkmerct;
-
         fread(tmp_mem,tmpstat.st_size,1,tmpfp);
         fwrite(tmp_mem,tmpstat.st_size,1,com_cofp);
         fclose(tmpfp);
