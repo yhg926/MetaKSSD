@@ -368,8 +368,6 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
       char cofname[PATHLEN];
 
       sprintf(cofname,"%s/%d.co",co_dir,i);
-      printf("decomposing %s\n",seqfname) ;
-
       llong *co;
 			//20190910 caution!!!: assume pipecmd generated fastq format to pipe 
       if(isOK_fmt_infile(seqfname,fastq_fmt,FQ_FMT_SZ) || opt_val->pipecmd[0]!='\0'){
@@ -383,11 +381,16 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 				}	
        }
        else{
+				if(opt_val->abundance) {
+					opt_val->abundance = 0; //20220721:close abundance mode if .fas file exists			
+					printf("Warning: close abundance mode (-A) since non-fastq file input.\n");
+				}
 			 	co = fasta2co(seqfname,CO[tid],opt_val->pipecmd);
         ctx_ct_list[i] = wrt_co2cmpn_use_inn_subctx(cofname,co);			
        }
-
-			all_ctx_ct += ctx_ct_list[i] ;	
+			printf("decomposing %s\n",seqfname) ;					
+			all_ctx_ct += ctx_ct_list[i] ;
+				
 		}
 
 
