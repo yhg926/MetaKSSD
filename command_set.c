@@ -27,8 +27,10 @@ static struct argp_option opt_set[] =
 	{"subtract",'s',"<pan>", 0,"subtract the pan-sketch from all input sketches.\v",2 },
 	{"intsect",'i',"<pan>", 0, "intersect with the pan-sketch for all input sketches.\v",2},
 	{"uniq_union",'q',0,  0, "get uniq union set of the sketches.\v",3 },
-	{"combin_pan",'c',0,  0, "combine pan file to combco file.\v",4 },
+	{"combin_pan",'c',0,  0, "combine pan files to combco file.\v",4 },
 	{"threads",'p',"<INT>",  0, "number of threads.\v",4 },
+	{"print",'P',0,  0, "print genome names.\v",4 },
+	{"subset",'S',"<path>",0,"subset combco file.\v",4},
 	{"outdir",'o',"<path>",0,"specify the output directory.\v",5},
   { 0 }
 };
@@ -44,28 +46,51 @@ typedef struct set_opt
 {
 	int operation;
 	int p;
+	int P;
 	int num_remaining_args;
 	char ** remaining_args;
 	char insketchpath[PATHLEN]; 
 	char pansketchpath[PATHLEN];
+	char subsetf[PATHLEN]; //subset infile
 	char outdir[PATHLEN];
 } set_opt_t ;
 
 set_opt_t set_opt = {
 .operation = -1,//0:subtract,1:intersect,2 union, 3 uniq_union, 4 combin_pan
 .p = 1,
+.P = 0,
 .num_remaining_args = 0,
 .remaining_args = NULL,			
 .insketchpath[0] = '\0',
 .pansketchpath[0]='\0',
+.subsetf[0] = '\0',
 .outdir = "./"
 };
 
 //extern const char co_dstat[];
+
+typedef struct subset
+{
+	int taxid;
+	char *taxname;
+	int *gids;
+} subset_t ;
+
+typedef struct compan
+{
+	int taxn;
+	int gn;
+	subset_t * tax;
+} compan_t;
+
+/*core functions*/
 int sketch_union();
 int sketch_operate();
 int uniq_sketch_union();
 int combin_pans();
+void print_gnames();
+compan_t *organize_taxf(char* taxfile);
+
 
 static error_t parse_set(int key, char* arg, struct argp_state* state) {
 
@@ -126,6 +151,16 @@ static error_t parse_set(int key, char* arg, struct argp_state* state) {
 			set_opt.p = atoi(arg); 
 			break;
 		}
+		case 'P':
+		{
+			set_opt.P = 1;	
+			break;
+		}
+		case 'S':
+		{
+			strcpy(set_opt.subsetf, arg);
+			break;
+		}
 		case ARGP_KEY_ARGS:
 			strcpy(set_opt.insketchpath, state->argv[state->next]);
 			set_opt.num_remaining_args = state->argc - state->next;
@@ -180,6 +215,7 @@ int cmd_set(struct argp_state* state)
 	if(argc >1){	
 		if(set_opt.operation == 2)
 			return sketch_union() ; 
+		
 		 if(set_opt.operation == 3)
 			return uniq_sketch_union() ;
 		if(set_opt.operation == 4)
@@ -187,7 +223,9 @@ int cmd_set(struct argp_state* state)
 		if(set_opt.operation == 0 || set_opt.operation == 1 )
 			return sketch_operate() ;
 		else {
-			printf("set operation use : -u, -q, -i or -s\n");
+			if(set_opt.P) print_gnames();
+			else if (set_opt.subsetf[0]!='\0') return combin_subset_pans(set_opt.subsetf);
+			else printf("set operation use : -u, -q, -i or -s\n");
 			return -1 ;
 		}
 	}
@@ -214,7 +252,7 @@ int sketch_union()
 	co_dstat_t co_dstat_readin;
 	fread( &co_dstat_readin, sizeof(co_dstat_t),1,co_stat_fp );
 
-	if(co_dstat_readin.infile_num == 1){ // no need creat
+	if(co_dstat_readin.infile_num == 1){ // no need create
 		char inpbuff;
 		printf("only 1 sketch, use %s as pan-sketch?(Y/N)\n",set_opt.insketchpath);
 		scanf(" %c", &inpbuff);
@@ -400,7 +438,7 @@ int uniq_sketch_union()
   co_dstat_t co_dstat_readin;
   fread( &co_dstat_readin, sizeof(co_dstat_t),1,co_stat_fp );
 
-  if(co_dstat_readin.infile_num == 1){ // no need creat hash
+  if(co_dstat_readin.infile_num == 1){ // no need create hash
     char inpbuff;
     printf("only 1 sketch, use %s as pan-sketch?(Y/N)\n",set_opt.insketchpath);
     scanf(" %c", &inpbuff);
@@ -523,7 +561,11 @@ int combin_pans()
 
 		for(int c = 0; c < co_dstat_one.comp_num; c++){
 			sprintf(tmppath,"%s/%s.%d",set_opt.remaining_args[i],pan_prefix,c);				
-			if(stat(tmppath, &file_stat) == -1) err(errno,"%s",tmppath);									
+			if(stat(tmppath, &file_stat) == -1) {
+				sprintf(tmppath,"%s/%s.%d",set_opt.remaining_args[i],uniq_pan_prefix,c);
+				if(stat(tmppath, &file_stat) == -1)
+					err(errno,"%s",tmppath);	
+			}								
 			unsigned int *tmpco = malloc(file_stat.st_size);
 
 			FILE *pan_fp = fopen(tmppath,"rb");
@@ -564,4 +606,257 @@ int combin_pans()
 	free(ctx_ct);
 	return 1;
 }
+
+
+void print_gnames(){
+	
+  const char* co_dstat_fpath = NULL;
+  co_dstat_fpath = test_get_fullpath(set_opt.insketchpath,co_dstat);
+  if(co_dstat_fpath == NULL ) err(errno,"cannot find %s under %s ",co_dstat,set_opt.insketchpath);
+
+  FILE *co_stat_fp;
+  if( ( co_stat_fp = fopen(co_dstat_fpath,"rb")) == NULL ) err(errno,"sketch_union():%s",co_dstat_fpath);
+  co_dstat_t co_dstat_readin;
+  fread( &co_dstat_readin, sizeof(co_dstat_t),1,co_stat_fp );
+	ctx_obj_ct_t *tmp_ctx_ct = malloc(sizeof(ctx_obj_ct_t)*co_dstat_readin.infile_num);
+	fread(tmp_ctx_ct,sizeof(ctx_obj_ct_t),co_dstat_readin.infile_num,co_stat_fp);
+	char (*tmpname)[PATHLEN] = malloc( PATHLEN * co_dstat_readin.infile_num );
+	fread(tmpname,PATHLEN,co_dstat_readin.infile_num,co_stat_fp);
+
+	
+	for(int i=0; i<co_dstat_readin.infile_num; i++ ){
+		printf("%s\n",tmpname[i]);
+	}
+	free(tmp_ctx_ct);
+  free(tmpname);
+}
+
+/*taxfile format is strict: int\t[string]*/
+compan_t *organize_taxf(char* taxfile){
+	FILE *tf = fopen(taxfile,"r");
+	if(tf == NULL) err(errno,"%s",taxfile);
+	int ln = 0; //line num;
+	for (char c = getc(tf); c != EOF; c = getc(tf))
+		if (c == '\n') ln++;
+	rewind(tf);
+#define D_TAXID (-1) //default value
+
+	int hashsz = nextPrime( (int)((double) ln / LD_FCTR) );
+	subset_t *tmphs = malloc(hashsz * sizeof(subset_t));
+	for(int i = 0 ; i < hashsz ; i++) {
+		tmphs[i].taxid = D_TAXID;
+		tmphs[i].taxname = NULL; 
+	}
+	char tmpstr[PATHLEN+1];
+	const char s[2] = "\t"; // this is delima
+	int tax_count = 0 ;
+	for(int i= 0; i< ln ; i++) {
+		fgets(tmpstr,PATHLEN,tf); 
+		if( tmpstr[strlen(tmpstr)-1] != '\n') 
+			err(errno,"organize_taxf(): %dth line %s is not full read %s, exceed PATHLEN %d ",i,tmpstr,PATHLEN);		
+		else tmpstr[strlen(tmpstr)-1] = '\0' ;
+		int taxid = atoi(strtok(tmpstr,s)) ;
+		char *taxname = strtok(NULL,s);
+		
+		for(int n = 0; n<hashsz ;n++){
+			int hv = HASH(taxid,n,hashsz);
+			if(tmphs[hv].taxid == D_TAXID) {
+				tmphs[hv].taxid = taxid;
+				tax_count++;
+				if(taxname != NULL){
+					tmphs[hv].taxname = malloc(strlen(taxname)+1);
+					strcpy(tmphs[hv].taxname,taxname);								
+				}
+				tmphs[hv].gids = malloc(2*sizeof(int));
+				tmphs[hv].gids[0] = 1;
+				tmphs[hv].gids[1] = i;
+				break;
+			}
+			else if(tmphs[hv].taxid == taxid){
+				if ( (tmphs[hv].taxname == NULL && taxname != NULL) 
+					|| (tmphs[hv].taxname != NULL && taxname == NULL)
+					|| (strcmp(tmphs[hv].taxname,taxname) != 0) ) 
+						err(errno,"organize_taxf() abort!: taxid %d has different taxnames in %dth and %dth lines",taxid,tmphs[hv].gids[1],i);
+								
+					tmphs[hv].gids[0]++;	
+					tmphs[hv].gids = realloc(tmphs[hv].gids,(tmphs[hv].gids[0]+1) * sizeof(int));	
+					tmphs[hv].gids[tmphs[hv].gids[0]] = i;
+					break;
+			}
+		
+		}
+	}
+	fclose(tf);
+		
+  
+	compan_t * subset = malloc(sizeof(compan_t));
+	subset->taxn = tax_count;
+	subset->gn = ln;
+	subset->tax = malloc(tax_count * sizeof(subset_t)) ;
+	int it = 0;
+	for(int n = 0; n <hashsz; n++){
+
+		if(tmphs[n].taxid != D_TAXID){
+			subset->tax[it] = tmphs[n];
+			it++;
+		}
+	}
+	free(tmphs);
+	return subset;
+}
+
+
+//subset a combco file to get pans and then combine them/
+int combin_subset_pans(char* taxfile){
+	compan_t *subset = organize_taxf(taxfile);
+	
+  const char* co_dstat_fpath = NULL;
+	co_dstat_fpath = test_get_fullpath(set_opt.insketchpath,co_dstat);
+  if(co_dstat_fpath == NULL ) err(errno,"cannot find %s under %s ",co_dstat,set_opt.insketchpath);
+
+	FILE *tmpfh;
+	if( ( tmpfh = fopen(co_dstat_fpath,"rb")) == NULL ) err(errno,"combin_subset_pans():%s",co_dstat_fpath);
+
+	co_dstat_t co_dstat_readin;
+	fread( &co_dstat_readin, sizeof(co_dstat_t),1,tmpfh );
+	fclose(tmpfh);
+
+	if(co_dstat_readin.infile_num != subset->gn)
+		err(errno,"combin_subset_pans():%s's genome number %d not matches %s's genome number %d",co_dstat_fpath,co_dstat_readin.infile_num,taxfile,subset->gn); 
+	free(co_dstat_fpath);	
+
+	mkdir(set_opt.outdir,0777);
+	char tmppath[PATHLEN];	struct stat s; int outfn; llong all_ctx_ct = 0;
+	ctx_obj_ct_t *ctx_ct_list = calloc(subset->taxn,sizeof(ctx_obj_ct_t));	
+	unsigned int comp_sz = (1 << 4*COMPONENT_SZ);
+  llong* dict = (llong*)malloc(comp_sz/8);
+  size_t *outcombcoidx  = malloc(sizeof(size_t)* (subset->taxn+1));	
+
+
+  for(int c=0; c < co_dstat_readin.comp_num; c++){
+		sprintf(tmppath,"%s/%s.%d",set_opt.insketchpath,skch_prefix,c);
+		if(stat(tmppath, &s) != 0)  err(errno,"combin_subset_pans():%s",tmppath);
+		unsigned int *tmpcombco = malloc(s.st_size);
+	
+		if((tmpfh = fopen(tmppath,"rb")) == NULL)  err(errno,"combin_subset_pans():%s",tmppath); 			
+		fread(tmpcombco,s.st_size, 1,tmpfh);
+		fclose(tmpfh);
+
+		sprintf(tmppath,"%s/%s.%d",set_opt.insketchpath,idx_prefix,c);
+		if(stat(tmppath, &s) != 0)  err(errno,"combin_subset_pans():%s",tmppath);
+		size_t *tmpcombcoidx	= malloc(s.st_size);
+		if((tmpfh = fopen(tmppath,"rb")) == NULL)  err(errno,"combin_subset_pans():%s",tmppath);
+		fread(tmpcombcoidx,s.st_size, 1,tmpfh);		
+		fclose(tmpfh);
+
+		sprintf(tmppath,"%s/%s.%d",set_opt.outdir,skch_prefix,c);		
+		if((tmpfh = fopen(tmppath,"wb")) == NULL)  err(errno,"combin_subset_pans():%s",tmppath);
+		
+		outfn = 0; // this is taxnum exclude of taxid 0
+		size_t offset = 0;
+		outcombcoidx[0] = 0;
+		for(int t = 0; t < subset->taxn; t++){
+			if(subset->tax[t].taxid == 0) continue;// ignore taxid 0
+				memset(dict,0,comp_sz/8);	
+				for(int n = 1; n <= subset->tax[t].gids[0];n++){
+					int gid = subset->tax[t].gids[n] ;
+
+					for(size_t i= tmpcombcoidx[gid]; i < tmpcombcoidx[gid+1];i++){
+						dict[tmpcombco[i]/64] |= ( 0x8000000000000000LLU >> (tmpcombco[i] % 64) ) ;										
+					}
+				}
+				//write union of tax[t]'s gids to combin_subset_pans combco file					
+				for(unsigned int n=0;n< comp_sz/64; n++){
+      		if(dict[n]){
+        		for(int b=0; b< 64; b++){
+          		if ((0x8000000000000000LLU >> b) & dict[n]){
+            		unsigned int var = 64*n + b ;
+            		fwrite(&var,sizeof(unsigned int),1,tmpfh);
+								offset++; all_ctx_ct++; ctx_ct_list[outfn]++;
+          		}
+        		}
+      		}			
+				}
+				outfn++;
+				outcombcoidx[outfn]= offset;
+		}
+		fclose(tmpfh);
+		//write unions idx to combin_subset_pans combco.idx file
+		sprintf(tmppath,"%s/%s.%d",set_opt.outdir,idx_prefix,c);
+		tmpfh = fopen(tmppath,"wb");
+		if(tmpfh == NULL)  err(errno,"combin_subset_pans():%s",tmppath);
+		fwrite(outcombcoidx,sizeof(size_t),outfn+1,tmpfh);
+		fclose(tmpfh);		
+		
+		free(tmpcombco);
+  	free(tmpcombcoidx);
+	}//component loop
+	//write costat file
+	co_dstat_readin.infile_num = outfn;		
+	co_dstat_readin.koc = 0;
+	co_dstat_readin.all_ctx_ct = all_ctx_ct;
+	//write ctx_ct_list
+	sprintf(tmppath,"%s/%s",set_opt.outdir,co_dstat);	
+	if((tmpfh = fopen(tmppath,"wb")) == NULL)  err(errno,"combin_subset_pans():%s",tmppath);
+	fwrite(&co_dstat_readin,sizeof(co_dstat_t),1,tmpfh);	
+	fwrite(ctx_ct_list,sizeof(ctx_obj_ct_t),outfn,tmpfh);
+	//write new genome names and free;
+	char (*tmpfname)[PATHLEN] = malloc(outfn * PATHLEN);
+	int idx = 0;
+  for(int t=0;t<subset->taxn;t++){		
+		if(subset->tax[t].taxid != 0) {		
+			if(subset->tax[t].taxname != NULL)
+				sprintf(tmpfname[idx],"%d_%s",subset->tax[t].taxid,subset->tax[t].taxname);		
+			else sprintf(tmpfname[idx],"%d",subset->tax[t].taxid);	
+			idx++;
+		}
+		free(subset->tax[t].gids);
+    free(subset->tax[t].taxname);
+  }
+  free(subset->tax);
+  free(subset);
+
+	fwrite(tmpfname,PATHLEN,outfn,tmpfh);	
+
+	fclose(tmpfh);		
+
+	free(tmpfname);
+	free(ctx_ct_list);
+	free(dict);
+	free(outcombcoidx);
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
