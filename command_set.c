@@ -30,7 +30,7 @@ static struct argp_option opt_set[] =
 	{"combin_pan",'c',0,  0, "combine pan files to combco file.\v",4 },
 	{"threads",'p',"<INT>",  0, "number of threads.\v",4 },
 	{"print",'P',0,  0, "print genome names.\v",4 },
-	{"subset",'S',"<path>",0,"subset combco file.\v",4},
+	{"grouping",'g',"<file>",0,"grouping genomes by input category file.\v",4},
 	{"outdir",'o',"<path>",0,"specify the output directory.\v",5},
   { 0 }
 };
@@ -156,7 +156,7 @@ static error_t parse_set(int key, char* arg, struct argp_state* state) {
 			set_opt.P = 1;	
 			break;
 		}
-		case 'S':
+		case 'g':
 		{
 			strcpy(set_opt.subsetf, arg);
 			break;
@@ -657,7 +657,6 @@ compan_t *organize_taxf(char* taxfile){
 		else tmpstr[strlen(tmpstr)-1] = '\0' ;
 		int taxid = atoi(strtok(tmpstr,s)) ;
 		char *taxname = strtok(NULL,s);
-		
 		for(int n = 0; n<hashsz ;n++){
 			int hv = HASH(taxid,n,hashsz);
 			if(tmphs[hv].taxid == D_TAXID) {
@@ -673,17 +672,17 @@ compan_t *organize_taxf(char* taxfile){
 				break;
 			}
 			else if(tmphs[hv].taxid == taxid){
-				if ( (tmphs[hv].taxname == NULL && taxname != NULL) 
-					|| (tmphs[hv].taxname != NULL && taxname == NULL)
-					|| (strcmp(tmphs[hv].taxname,taxname) != 0) ) 
-						err(errno,"organize_taxf() abort!: taxid %d has different taxnames in %dth and %dth lines",taxid,tmphs[hv].gids[1],i);
-								
+
+				if( (tmphs[hv].taxname == NULL && taxname != NULL )
+					||(tmphs[hv].taxname != NULL && taxname == NULL)
+					|| (taxname != NULL &&  strcmp(tmphs[hv].taxname,taxname) != 0) 
+					) err(errno,"organize_taxf() abort!: taxid %d has different taxnames in %dth and %dth lines",taxid,tmphs[hv].gids[1],i);
+
 					tmphs[hv].gids[0]++;	
 					tmphs[hv].gids = realloc(tmphs[hv].gids,(tmphs[hv].gids[0]+1) * sizeof(int));	
 					tmphs[hv].gids[tmphs[hv].gids[0]] = i;
 					break;
 			}
-		
 		}
 	}
 	fclose(tf);
@@ -709,7 +708,6 @@ compan_t *organize_taxf(char* taxfile){
 //subset a combco file to get pans and then combine them/
 int combin_subset_pans(char* taxfile){
 	compan_t *subset = organize_taxf(taxfile);
-	
   const char* co_dstat_fpath = NULL;
 	co_dstat_fpath = test_get_fullpath(set_opt.insketchpath,co_dstat);
   if(co_dstat_fpath == NULL ) err(errno,"cannot find %s under %s ",co_dstat,set_opt.insketchpath);
