@@ -114,7 +114,7 @@ real_time_mem -= phash_mem;
 			opt_val->abundance = false; //disable abundance mode in ref input 
 			const char *refcostat = run_stageI(opt_val, ref_stat, shuffled_refname_ind, dist_refco_dir, p_fit_mem);
 			
-			run_stageII(refcostat,opt_val->p);			
+			run_stageII(refcostat, opt_val->outdir , opt_val->p);			
 
 			free(dim_shuffle->shuffled_dim);
 
@@ -123,7 +123,7 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 		} // run both stageI and II mode end
  		//only run stage II mode
 		else if ( refco_dstat_fpath != NULL )
-			run_stageII(refco_dstat_fpath,opt_val->p);
+			run_stageII(refco_dstat_fpath,opt_val->outdir,opt_val->p);
 	
 		else if(refmco_dstat_fpath != NULL) {;} //read mco..
 
@@ -184,7 +184,7 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 		// if only .co query 
 		else if( qryco_dstat_fpath != NULL) { // convert .co folder opt_val->remaining_args[0]  to .mco
 			if( opt_val->num_remaining_args == 1 ){
-      	run_stageII(qryco_dstat_fpath, opt_val->p);
+      	run_stageII(qryco_dstat_fpath,opt_val->outdir, opt_val->p);
 			}
 			else if (opt_val->num_remaining_args > 1){ //20190813: combined multiple batches qry/ to a single qry/ 
 				combine_queries(opt_val);
@@ -491,13 +491,16 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 	return (const char *)co_dstat_fullname;
 }
 
-void run_stageII(const char * co_dstat_fpath, int p_fit_mem)
+void run_stageII(const char * co_dstat_fpath, const char* dist_mco_dir, int p_fit_mem)
 {
-			//get full path of co stat and mco stat file						
 		  const char* dist_co_dir = get_pathname(co_dstat_fpath,co_dstat);
-		  const char* dist_rslt_dir = malloc(PATHLEN*sizeof(char));		
-			sprintf((char*)dist_rslt_dir,"%s/..",dist_co_dir);
-      const char* dist_mco_dir = mk_dist_rslt_dir(dist_rslt_dir,"ref"); //"mco"
+			if	( mkdir(dist_mco_dir, 0700) ) {
+				if(errno == EEXIST)
+					printf("Warning: write mco file to an exists outdir:%s\n",dist_mco_dir);
+				else
+					err(errno,"run_stageII(): mkdir %s error", dist_mco_dir); 
+
+			}
       const char* mco_dstat_fpath = malloc(PATHLEN*sizeof(char));
 			sprintf((char*)mco_dstat_fpath,"%s/%s",dist_mco_dir,mco_dstat);			
 
@@ -507,7 +510,7 @@ void run_stageII(const char * co_dstat_fpath, int p_fit_mem)
 			co_dstat_t co_dstat_readin;	
 			//subtract last pointer size if co_dstat_t last member is pointer
 			fread( &co_dstat_readin, sizeof(co_dstat_t),1,co_stat_fp );
-			if (co_dstat_readin.koc) err(errno,"run_stageII(): can not build reference database use koc file, you may want provie these files as query");
+			//if (co_dstat_readin.koc) err(errno,"run_stageII(): can not build reference database use koc file, you may want provide these files as query");
 			//char (*seqfilebasename)[PATHLEN] = malloc(co_dstat_readin.infile_num * PATHLEN);			
 			// write stat file to mco dir
 			if( ( mco_stat_fp = fopen(mco_dstat_fpath,"wb")) == NULL ) err(errno,"run_stageII(():%s",mco_dstat_fpath);
@@ -535,8 +538,6 @@ void run_stageII(const char * co_dstat_fpath, int p_fit_mem)
 
 
 			free((char*)dist_co_dir );
-			free((char*)dist_rslt_dir);
-			free((char*)dist_mco_dir);
 			free((char*)mco_dstat_fpath);
 }
 
