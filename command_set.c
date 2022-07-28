@@ -30,7 +30,7 @@ static struct argp_option opt_set[] =
 	{"combin_pan",'c',0,  0, "combine pan files to combco file.\v",4 },
 	{"threads",'p',"<INT>",  0, "number of threads.\v",4 },
 	{"print",'P',0,  0, "print genome names.\v",4 },
-	{"grouping",'g',"<file>",0,"grouping genomes by input category file.\v",4},
+	{"grouping",'g',"<file.tsv>",0,"grouping genomes by input category file.\v",4},
 	{"outdir",'o',"<path>",0,"specify the output directory.\v",5},
   { 0 }
 };

@@ -13,12 +13,14 @@ typedef struct kmerdb_index
 	unsigned int *row_bin_gnum;
 } kmerdb_index_t;
 void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum, int comp_num, int p_fit_mem)
-{	
+{
 	kmerdb_index_t mco_map;		
-	unsigned int comp_sz = (1 << 4*COMPONENT_SZ) ;
+	//20220726 caution: unsigned int comp_sz, bug fix: unsigned int comp_sz*binnum excceed 2^32(unsigned int limit) and cause segmenation fault
+	//type convert need in below usage
+	unsigned int comp_sz = (1 << 4*COMPONENT_SZ);
 	int binnum = ceil((double)cofnum/BIN_SZ);	
 	// gnum in each bin each row
-	mco_map.row_bin_gnum = malloc(comp_sz*binnum*sizeof(unsigned int));
+	mco_map.row_bin_gnum = malloc((size_t)comp_sz*binnum*sizeof(unsigned int));
 	mco_map.row_gnum = malloc(comp_sz * sizeof(unsigned int));
 	mco_map.row_offset = malloc(comp_sz*sizeof(size_t) );	
 	mco_map.row_offset[0] = 0;
@@ -32,7 +34,7 @@ void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum,
 	gid_arr_llist_t** mco = malloc(comp_sz* sizeof(gid_arr_llist_t*));
 	for(unsigned int i = 0; i< comp_num; i++){
 		//reset count to 0 for each component
-		memset(mco_map.row_bin_gnum,0,comp_sz*binnum*sizeof(unsigned int) );
+		memset(mco_map.row_bin_gnum,0,(size_t)comp_sz*binnum*sizeof(unsigned int) );
 		memset(mco_map.row_gnum,0,comp_sz * sizeof(unsigned int));
 
 		FILE *cbdfp, *cbdindexfp;
@@ -43,7 +45,6 @@ void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum,
 		//get index
 		fread(cbdcoindex,sizeof(size_t),cofnum + 1,cbdindexfp);			
 		mmpcbd_cofile = mmp_uint_arr(cbdcofname);
-				
 /********cbdco to llmco block**********/
 		for(int j = 0;j< cofnum; j++ ){
 #pragma omp parallel for num_threads(p_fit_mem) schedule(guided)
@@ -56,14 +57,13 @@ void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum,
 					mco[ind] = malloc(sizeof(gid_arr_llist_t));
 					if (mco[ind] == NULL) err(errno,"cdb_kmerf2kmerdb()::mco[ind]") ;
 					mco[ind]->next = tmp; 
-				}								
+				}
 				mco[ind]->gidobj[mod] = j % BIN_SZ ;
 				mco_map.row_gnum[ind]++;
 				mco_map.row_bin_gnum[ind*binnum + j/BIN_SZ]++; //#define arr[x][y] arr[x*binnum+y/BIN_SZ], x:row_num, y:bin_num
 			} 
 		}
 		munmap(mmpcbd_cofile.mmpco, mmpcbd_cofile.fsize);
-
 		for(int n=1; n<comp_sz; n++)
 			mco_map.row_offset[n] = mco_map.row_offset[n-1] + mco_map.row_gnum[n-1];
 	
@@ -72,7 +72,7 @@ void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum,
 		FILE *arrmco_index_fp = fopen(mcoindexf,"wb");		
 		if( arrmco_index_fp  == NULL) err(errno,"%s",mcoindexf);
 		fwrite(mco_map.row_offset,sizeof(size_t),comp_sz,arrmco_index_fp);
-		fwrite(mco_map.row_bin_gnum,sizeof(unsigned int),comp_sz*binnum, arrmco_index_fp);
+		fwrite(mco_map.row_bin_gnum,sizeof(unsigned int),(size_t)comp_sz*binnum, arrmco_index_fp);
 		fclose(arrmco_index_fp);	
 /**************write llmco to arrmco file**************/
 		sprintf(mcofname,"%s/mco.%d",mcodirname,i);
