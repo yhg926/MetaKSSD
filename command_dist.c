@@ -167,7 +167,8 @@ real_time_mem += mem_usage_stat.shuffled_subctx_arr_sz;
 					err(errno, "qry comp_num: %d not match ref comp_num: %d",co_qry_dstat.comp_num, mco_ref_dstat.comp_num);
 				
 				//mco_cbd_co_dist(opt_val);
-				mco_cbd_koc_compatible_dist(opt_val);
+				//mco_cbd_koc_compatible_dist(opt_val);
+				mco_cbdco_nobin_dist(opt_val);
 		  }
 			else if (qrymco_dstat_fpath != NULL)
 				err(errno,"when -r specified, the query sould not be .mco format, the valid query format shoulde be .fas/.fq file or .co");
@@ -535,9 +536,9 @@ void run_stageII(const char * co_dstat_fpath, const char* dist_mco_dir, int p_fi
 			fclose(co_stat_fp);
 			fclose(mco_stat_fp);
 
-			cdb_kmerf2kmerdb(dist_mco_dir,dist_co_dir,co_dstat_readin.infile_num,co_dstat_readin.comp_num,p_fit_mem);
-
-
+//			cdb_kmerf2kmerdb(dist_mco_dir,dist_co_dir,co_dstat_readin.infile_num,co_dstat_readin.comp_num,p_fit_mem);
+			combco2mco(dist_mco_dir,dist_co_dir,co_dstat_readin.infile_num,co_dstat_readin.comp_num,p_fit_mem);
+		
 			free((char*)dist_co_dir );
 			free((char*)mco_dstat_fpath);
 }
@@ -889,12 +890,194 @@ void mco_cbd_co_dist(dist_opt_val_t *opt_val_in)
   free(cofname);
 }//func end
 
+
+void mco_cbdco_nobin_dist(dist_opt_val_t *opt_val_in) //currently used version(20220802)
+{
+  int p_fit_mem = opt_val_in->p;
+  llong mem_limit = (llong)opt_val_in->mmry*BBILLION;
+  char *refmco_dname = opt_val_in->refpath;
+  char *qryco_dname = opt_val_in->remaining_args[0];
+  const char *distout_dir = opt_val_in->outdir;
+  mkdir(distout_dir,0700);
+  FILE *refmco_dstat_fp, *qryco_dstat_fp;
+  char *refmco_dstat_fpath = malloc(PATHLEN*sizeof(char));
+  char *qryco_dstat_fpath = malloc(PATHLEN*sizeof(char));
+  sprintf(refmco_dstat_fpath,"%s/%s",refmco_dname,mco_dstat);
+  sprintf(qryco_dstat_fpath,"%s/%s",qryco_dname,co_dstat);
+
+  if( (refmco_dstat_fp = fopen(refmco_dstat_fpath,"rb")) == NULL )
+    err(errno,"need provied mco dir path for mco_co_dist() arg 1. refmco_dstat_fpath");
+  if( (qryco_dstat_fp = fopen(qryco_dstat_fpath,"rb")) == NULL )
+    err(errno,"need provied co dir path for mco_co_dist() arg 2.  qryco_dstat_fpath");
+
+  mco_dstat_t mco_dstat_readin ;
+  co_dstat_t co_dstat_readin ;
+  fread(&mco_dstat_readin,sizeof(mco_dstat_readin),1,refmco_dstat_fp);
+  fread(&co_dstat_readin,sizeof(co_dstat_readin),1,qryco_dstat_fp);
+
+  //read ctx_ct_list
+  ctx_obj_ct_t * qry_ctx_ct_list = malloc(co_dstat_readin.infile_num * sizeof(ctx_obj_ct_t));
+  ctx_obj_ct_t * ref_ctx_ct_list = malloc(mco_dstat_readin.infile_num * sizeof(ctx_obj_ct_t));
+  fread(qry_ctx_ct_list,sizeof(ctx_obj_ct_t),co_dstat_readin.infile_num,qryco_dstat_fp);
+  fread(ref_ctx_ct_list,sizeof(ctx_obj_ct_t),mco_dstat_readin.infile_num,refmco_dstat_fp);
+  // read filenames
+  char (*cofname)[PATHLEN] = malloc(co_dstat_readin.infile_num * PATHLEN);
+  char (*mcofname)[PATHLEN] = malloc(mco_dstat_readin.infile_num * PATHLEN);
+  fread(cofname,PATHLEN,co_dstat_readin.infile_num,qryco_dstat_fp);
+  fread(mcofname,PATHLEN,mco_dstat_readin.infile_num,refmco_dstat_fp);
+
+  fclose(refmco_dstat_fp);
+  fclose(qryco_dstat_fp);
+
+  if( !(mco_dstat_readin.comp_num == co_dstat_readin.comp_num) )
+    err(errno,"query args not match ref args: ref.comp_num = %d vs. %d = qry.comp_num",
+    mco_dstat_readin.comp_num, co_dstat_readin.comp_num);
+  if(!(mco_dstat_readin.shuf_id == co_dstat_readin.shuf_id))
+    err(errno,"query args not match ref args: ref.shuf_id = %d vs. %d = qry.shuf_id",
+    mco_dstat_readin.shuf_id, co_dstat_readin.shuf_id);
+
+
+  /*****creat one dist binary file  *****/
+  char onedist[PATHLEN];
+  sprintf(onedist,"%s/sharedk_ct.dat",distout_dir);
+  int dist_bfp = open(onedist,O_RDWR,0600) ;
+  if (dist_bfp == -1) {
+    close(dist_bfp);
+    dist_bfp = open(onedist,O_RDWR|O_CREAT, 0600) ;
+    if (dist_bfp == -1) err(errno," mco_cbdco_nobin_dist()::%s",onedist);  //reset name after test
+  }else err(EEXIST," mco_cbdco_nobin_dist():%s",onedist);
+
+  int page_sz = sysconf(_SC_PAGESIZE);
+  size_t comp_sz = (1 << 4*COMPONENT_SZ);//20220730: old unsigned in comp_sz will overflow when COMPONENT_SZ >=8
+  if( comp_sz % page_sz != 0 ) err(errno,"comp_sz %d is not multiple of page_sz %d ",comp_sz,page_sz );
+
+  size_t maplength;
+  int bnum_infile;
+  FILE *cbd_fcode_comp_fp,*cbd_fcode_comp_index_fp;
+  struct stat cbd_fcode_stat;
+  //make sure index file has extra element for computing last cofile length
+  size_t *fco_pos = malloc(sizeof(size_t) * (co_dstat_readin.infile_num + 1) );
+  size_t *mco_offset_index = malloc(sizeof(size_t) * comp_sz);
+#define MCOMM_SZ  442317172
+  gidobj_t* mco_mem = malloc( sizeof(gidobj_t) * MCOMM_SZ ); //set to largest mmco
+
+  char mco_fcode[PATHLEN]; char mco_index_fcode[PATHLEN];
+  char co_cbd_fcode[PATHLEN];char co_cbd_index_fcode[PATHLEN];
+  //global var set
+  ref_seq_num = mco_dstat_readin.infile_num ;
+  qry_seq_num = co_dstat_readin.infile_num ;
+  kmerlen = co_dstat_readin.kmerlen;
+  dim_reduct_len = co_dstat_readin.dim_rd_len;
+  char distf[PATHLEN];
+  sprintf(distf, "%s/distance.out", distout_dir);
+
+  int num_unit_mem = mem_limit / (mco_dstat_readin.infile_num*sizeof(ctx_obj_ct_t) * page_sz);
+  if(num_unit_mem < 1) err(errno,"at least %fG memory needed to map ./onedist, specify more memory use -m",
+      (float)mco_dstat_readin.infile_num*sizeof(ctx_obj_ct_t) * page_sz/1073741824 ); //1G = 1073741824
+
+  int num_cof_batch = num_unit_mem*page_sz;
+
+  if( opt_val_in->shared_kmerpath[0] != '\0'){ //use previous share_k_ct for distance printing
+    dist_print_nobin(distout_dir,ref_seq_num, qry_seq_num, ref_ctx_ct_list, qry_ctx_ct_list,num_cof_batch,mcofname, cofname,opt_val_in);
+    return;
+  }
+  size_t unitsz_distf_mapped = (size_t)num_cof_batch * mco_dstat_readin.infile_num * sizeof(ctx_obj_ct_t) ;
+  int num_mapping_distf = co_dstat_readin.infile_num / num_cof_batch ;
+  size_t disf_sz = (size_t)mco_dstat_readin.infile_num*co_dstat_readin.infile_num*sizeof(ctx_obj_ct_t) ;
+
+  if(ftruncate(dist_bfp, disf_sz) == -1) err(errno,"mco_cbdco_nobin_dist()::ftruncate");
+  close(dist_bfp);
+  dist_bfp = open(onedist,O_RDWR, 0600);
+  if (dist_bfp == -1) err(errno,"mco_cbdco_nobin_dist()::%s",onedist);
+  ctx_obj_ct_t *ctx_obj_ct = mmap(NULL,disf_sz,PROT_READ | PROT_WRITE,MAP_SHARED,dist_bfp,0);
+  if(ctx_obj_ct == MAP_FAILED) err(errno,"ctx_obj_ct mmap error");
+  close(dist_bfp);
+
+/*new: read all components in to memory to aviod frequently read qry and ref files */	
+	mmp_any_t* mco_offset_index_comps =  malloc(sizeof( mmp_any_t) * mco_dstat_readin.comp_num);
+	mmp_any_t* mco_mem_comps =  malloc(sizeof( mmp_any_t) * mco_dstat_readin.comp_num);
+	mmp_any_t* fco_pos_comps =  malloc(sizeof( mmp_any_t) * mco_dstat_readin.comp_num);
+	mmp_any_t* cbd_fcode_mem_comps =  malloc(sizeof( mmp_any_t) * mco_dstat_readin.comp_num);
+
+	for ( int j = 0; j < mco_dstat_readin.comp_num; j++ ) {
+
+		sprintf(mco_index_fcode,"%s/%s.%d",refmco_dname,mco_idx_prefix,j);
+		mco_offset_index_comps[j] =  mmp_any(mco_index_fcode);	
+		sprintf(mco_fcode,"%s/%s.%d",refmco_dname,mco_gids_prefix,j);
+		mco_mem_comps[j] =  mmp_any(mco_fcode);
+	
+		sprintf(co_cbd_index_fcode,"%s/%s.%d",qryco_dname,idx_prefix,j);
+		fco_pos_comps[j] = mmp_any(co_cbd_index_fcode);
+
+		sprintf(co_cbd_fcode,"%s/%s.%d",qryco_dname,skch_prefix,j);
+		cbd_fcode_mem_comps[j] = mmp_any(co_cbd_fcode);
+	}
+/* mmap all ref qry files end*/
+  for(int b=0;b<=num_mapping_distf;b++){// b: batch
+    if(b==num_mapping_distf) bnum_infile = co_dstat_readin.infile_num % num_cof_batch ;
+		else bnum_infile = num_cof_batch; 
+    if( bnum_infile == 0 ) continue;
+
+    maplength = (size_t)bnum_infile * mco_dstat_readin.infile_num * sizeof(ctx_obj_ct_t);
+printf("disf_sz=%lu\trefnum=%d\tqrynum=%d\tnum_mapping_distf=%d\tbatch_qrynum=%d\t%lu\t%lu\n",disf_sz,mco_dstat_readin.infile_num,co_dstat_readin.infile_num,num_mapping_distf,bnum_infile,maplength,(size_t)b*unitsz_distf_mapped);
+
+    for ( int j = 0; j < mco_dstat_readin.comp_num; j++ ) {
+			size_t *mco_offset_index= (size_t *) mco_offset_index_comps[j].mmp;
+			gidobj_t* mco_mem = (gidobj_t*) mco_mem_comps[j].mmp;
+			
+			size_t *fco_pos = (size_t *)fco_pos_comps[j].mmp;
+			unsigned int *cbd_fcode_mem = (unsigned int *)cbd_fcode_mem_comps[j].mmp;
+		
+#pragma omp parallel for  num_threads(p_fit_mem) schedule(guided)
+      for(int kind = 0; kind < bnum_infile; kind++){
+        int k = b*num_cof_batch + kind; //fcode in combined list
+        if(qry_ctx_ct_list[k]==0) continue;
+//**mco_cbdco_nobin_dist_core block
+        size_t distf_offset = (size_t)k * mco_dstat_readin.infile_num;
+        for(size_t n = fco_pos[k]; n < fco_pos[k+1]; n++){
+          unsigned int ind = cbd_fcode_mem[n];
+					size_t s = ind > 0 ? mco_offset_index[ind-1] : 0 ;
+					// mco_mem[g] is mcogid for kth qrygenome
+					for(size_t g = s; g < mco_offset_index[ind] ; g++)
+						ctx_obj_ct[distf_offset + mco_mem[g]]++ ;
+        }
+//**mco_cbdco_nobin_dist_core block end**
+      }
+    }//components loop end
+
+    if ( msync( ctx_obj_ct + (size_t)b*num_cof_batch*mco_dstat_readin.infile_num, maplength, MS_SYNC ) < 0 )
+      err(errno,"mco_cbdco_nobin_dist()::ctx_obj_ct msync failed");
+    munmap(ctx_obj_ct + (size_t)b*num_cof_batch*mco_dstat_readin.infile_num,  maplength);
+  } // batch loop end
+
+	for ( int j = 0; j < mco_dstat_readin.comp_num; j++ ){
+		munmap(mco_offset_index_comps[j].mmp,mco_offset_index_comps[j].fsize);
+		munmap(mco_mem_comps[j].mmp,mco_mem_comps[j].fsize);
+		munmap(fco_pos_comps[j].mmp,fco_pos_comps[j].fsize);
+		munmap(cbd_fcode_mem_comps[j].mmp,cbd_fcode_mem_comps[j].fsize);
+	}
+  free(mco_offset_index_comps);
+  free( mco_mem_comps);
+  free( fco_pos_comps);
+  free (cbd_fcode_mem_comps);
+
+  dist_print_nobin(distout_dir,ref_seq_num, qry_seq_num, ref_ctx_ct_list, qry_ctx_ct_list,num_cof_batch,mcofname,cofname,opt_val_in);
+
+  free(mco_offset_index);
+  free(mco_mem);
+  free(ref_ctx_ct_list);
+  free(qry_ctx_ct_list);
+  free(mcofname);
+  free(cofname);
+
+}//func end
+
 typedef struct koc_dist {
-	llong shared_koc_ct;
-	ctx_obj_ct_t shared_k_ct;
+  llong shared_koc_ct;
+  ctx_obj_ct_t shared_k_ct;
 } koc_dist_t;
 
-void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in) // currently used version
+void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in) //  latest version before 20220802
 {
   int p_fit_mem = opt_val_in->p;
   llong mem_limit = (llong)opt_val_in->mmry*BBILLION;
@@ -1060,8 +1243,8 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in) // currently used v
           for(int bin=0; bin < ref_bin_num; bin++){
             int bin_gnum = mco_bin_index[ (size_t)ind *ref_bin_num + bin ];
             for(int g = 0; g < bin_gnum ; g++ ){
-              mcogid = bin*BIN_SZ + mco_mem[ (size_t)mco_offset_index[ind] + pos ]; //20220730 bug? pos shoud be g
-              ctx_obj_ct[distf_offset + mcogid]++ ; //<-here bug found, distf_offset + mcogid > infilenumdistf_offset + mcogid
+              mcogid = bin*BIN_SZ + mco_mem[ (size_t)mco_offset_index[ind] + pos ]; 
+              ctx_obj_ct[distf_offset + mcogid]++ ;
               pos++;
             }
           }

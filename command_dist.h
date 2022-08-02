@@ -121,6 +121,7 @@ const char * run_stageI (dist_opt_val_t *opt_val,infile_tab_t *seqfile_stat,
 
 void run_stageII(const char * co_dstat_fpath, const char* dist_mco_dir, int p_fit_mem);
 //void run_stageII(const char * co_dstat_fpath, int p_fit_mem);
+void mco_cbdco_nobin_dist(dist_opt_val_t *opt_val_in); //currently used version(20220802) 
 void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir, int p_fit_mem);
 void mco_cbd_co_dist(dist_opt_val_t *opt_val_in);
 void mco_cbd_koc_compatible_dist (dist_opt_val_t *opt_val_in);

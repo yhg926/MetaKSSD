@@ -3,14 +3,28 @@
 
 /***core: .mco entry type***/
 #include "global_basic.h"
-typedef unsigned short gidobj_t ;// may uint24_t;
+#include <stdint.h> 
+//typedef unsigned short gidobj_t ;// may uint24_t;
+typedef uint32_t gidobj_t;
+typedef struct mco_index
+{
+  size_t *row_offset;
+  unsigned int *row_gnum;
+  unsigned int *row_bin_gnum;
+} mco_index_t;
+
+typedef struct kmerdb_index
+{
+  size_t *row_offset;
+  unsigned int *row_gnum;
+  unsigned int *row_bin_gnum;
+} kmerdb_index_t;
 
 typedef struct gid_arr_llist
 {
   gidobj_t gidobj[GID_ARR_SZ];
   struct gid_arr_llist *next;
 } gid_arr_llist_t ;
-
 
 typedef struct 
 {
@@ -20,6 +34,7 @@ typedef struct
 
 mco_entry_stat_t** co2unitllmco(const char *codirname, int bin_sz, int bin_id, int component_id);
 mco_entry_stat_t** fread_co2unitllmco(const char *codirname, int bin_sz, int bin_id, int component_id);
+void combco2mco(const char *mcodirname, const char *codirname, int cofnum, int comp_num, int p_fit_mem);
 void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum, int comp_num, int p_fit_mem);
 
 gidobj_t** llmco2arrmco(mco_entry_stat_t** llmco);
