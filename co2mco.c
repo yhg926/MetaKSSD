@@ -4,14 +4,88 @@
 #include <errno.h>
 #include <math.h>
 #ifdef _OPENMP
-  #include <omp.h>
+	#include <omp.h>
 #endif
-typedef struct kmerdb_index
+
+const char mco_gids_prefix[] = "mco";
+const char mco_idx_prefix[] = "mco.index";
+void combco2mco(const char *mcodirname, const char *codirname, int cofnum, int comp_num, int p_fit_mem)
 {
-	size_t *row_offset;
-	unsigned int *row_gnum;
-	unsigned int *row_bin_gnum;
-} kmerdb_index_t;
+
+  char cbdcofname[PATHLEN]; char cbdcoindexf[PATHLEN];
+  char mcofname[PATHLEN]; char mcoindexf[PATHLEN];
+
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ);
+	size_t *cbdcoindex = malloc( sizeof(size_t)*(cofnum + 1) );
+  gidobj_t ** mco = malloc(comp_sz*sizeof(gidobj_t *));
+//	for(unsigned int i = 0;i<comp_sz;i++) mco[i] = malloc(sizeof(gidobj_t *));
+	size_t *row_offset = malloc(comp_sz*sizeof(size_t) );
+
+  for( int i = 0; i< comp_num; i++){
+	
+		memset(row_offset,0,comp_sz*sizeof(size_t));
+
+    sprintf(cbdcoindexf,"%s/%s.%d",codirname,idx_prefix,i);
+		FILE *cbdindexfp = fopen(cbdcoindexf,"rb") ;
+    if(cbdindexfp == NULL) err(errno,"%s",cbdcoindexf);
+    fread(cbdcoindex,sizeof(size_t),cofnum + 1,cbdindexfp);
+		fclose(cbdindexfp);
+
+		sprintf(cbdcofname,"%s/%s.%d",codirname,skch_prefix,i);
+    mmp_uint_t mmpcbd_cofile = mmp_uint_arr(cbdcofname);
+/********cbdco to llmco block**********/
+    for(int j = 0;j< cofnum; j++ ){
+#pragma omp parallel for num_threads(p_fit_mem) schedule(guided)
+      for(size_t k = cbdcoindex[j]; k< cbdcoindex[j+1]; k++){
+
+        unsigned int ind = mmpcbd_cofile.mmpco[k];
+				
+				//int size = row_offset[ind] < GID_ARR_SZ ? GID_ARR_SZ : 2*row_offset[ind]; 
+
+				if(row_offset[ind] == 0) mco[ind] = malloc(GID_ARR_SZ*sizeof(gidobj_t));
+				else if ((row_offset[ind]*2 >= GID_ARR_SZ) ){
+					//test if row_offset[ind] is pow of 2
+					if ( ((ulong)row_offset[ind] & ((ulong)row_offset[ind] -1))  == 0) {
+//20220801: double relloc size is much faster and memory saving than increasement of unit of GID_ARR_SZ, reason ?
+						mco[ind] = realloc( mco[ind], 2*row_offset[ind] * sizeof(gidobj_t) );
+					}
+				
+				}	
+        mco[ind][row_offset[ind]] = j ;
+        row_offset[ind]++;
+      }
+    }
+    munmap(mmpcbd_cofile.mmpco, mmpcbd_cofile.fsize);
+		//:caution!!!: row_offset is same format with comboco.index file but ignore the first element 0
+    for(size_t n=1; n<comp_sz; n++) row_offset[n] += row_offset[n-1];
+
+/**************write index file**************/
+    sprintf(mcoindexf,"%s/%s.%d",mcodirname,mco_idx_prefix,i);
+    FILE *arrmco_index_fp = fopen(mcoindexf,"wb");
+    if( arrmco_index_fp  == NULL) err(errno,"%s",mcoindexf);
+    fwrite(row_offset,sizeof(size_t),comp_sz,arrmco_index_fp);
+    fclose(arrmco_index_fp);
+
+/**************write arrmco file**************/
+    sprintf(mcofname,"%s/%s.%d",mcodirname,mco_gids_prefix,i);
+    FILE* arrmco_fp = fopen(mcofname,"wb") ;
+    if (arrmco_fp == NULL) err(errno,"combco2mco()::%s",mcofname);
+
+    for(size_t s = 0; s< comp_sz ; s++ ){
+
+			int row_gnum = s>0? row_offset[s] - row_offset[s-1] :  row_offset[0];
+      if( row_gnum > 0 )  //arr_len
+				fwrite(mco[s],sizeof(gidobj_t),row_gnum,arrmco_fp);
+			free(mco[s]);
+    } // end all rows
+		fclose(arrmco_fp);		
+  }  //componets loop end
+	
+	free(mco);
+  free(cbdcoindex);
+	free(row_offset) ;
+}
+
 void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum, int comp_num, int p_fit_mem)
 {
 	kmerdb_index_t mco_map;		
