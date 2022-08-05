@@ -256,7 +256,9 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 		}// for c
 
 		// sort ref_abund
-#define MIN_KM_S 10 // minimal kmer share for a ref genome		
+#define MIN_KM_S 6 // minimal kmer share for a ref genome		
+#define ST_PCTL (0.98) //start percentile
+#define ED_PCTL (0.99) //end percentile
 		int *sort_ref = malloc(ref_dstat.infile_num* sizeof(int));
   	for(int i = 0; i< ref_dstat.infile_num; i++) sort_ref[i] = i;		
 		qsort(sort_ref, ref_dstat.infile_num, sizeof(sort_ref[0]), comparator_idx);		
@@ -265,14 +267,19 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 			int kmer_num = ref_abund[sort_ref[i]][0]; // overlapped kmer_num 
 			if (kmer_num < MIN_KM_S) break; 						
 			qsort(ref_abund[sort_ref[i]] + 1, kmer_num, sizeof(int),comparator);
-			int sum = 0;
+//average
+			int sum = 0; 
 			for(int n = 1; n <= kmer_num; n++) sum+= ref_abund[sort_ref[i]][n];
-
-			int median_idx = (kmer_num + 1)/2;
-			int pct09_idx = (kmer_num + 1) * 0.9 ;
-
-			printf("%s\t%s\t%d\t%f\t%d\t%d\n",qryname[qn],refname[sort_ref[i]], kmer_num, (float)sum/kmer_num,
-			 ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][pct09_idx]);
+//median:real median is (kmer_num + 1)/2, but we ignore the last(most abundant) k-mer so use			
+			int median_idx = kmer_num /2;
+			int pct09_idx = kmer_num  * ST_PCTL ;
+//percentile range average
+			int lastsum = 0; int lastn = 0;
+      for(int n = pct09_idx ; n <= kmer_num*ED_PCTL; n++) {
+				lastsum += ref_abund[sort_ref[i]][n];
+				lastn++;
+			}
+			printf("%s\t%s\t%d\t%f\t%f\t%d\t%d\n",qryname[qn],refname[sort_ref[i]], kmer_num, (float)sum/kmer_num,(float)lastsum/lastn,ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][pct09_idx]);
 		}		
 
 		free(sort_ref);
