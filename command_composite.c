@@ -279,7 +279,7 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 				lastsum += ref_abund[sort_ref[i]][n];
 				lastn++;
 			}
-			printf("%s\t%s\t%d\t%f\t%f\t%d\t%d\n",qryname[qn],refname[sort_ref[i]], kmer_num, (float)sum/kmer_num,(float)lastsum/lastn,ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][pct09_idx]);
+			printf("%s\t%s\t%d\t%f\t%f\t%d\t%d\n",qryname[qn],refname[sort_ref[i]], kmer_num, (float)sum/kmer_num,(float)lastsum/lastn,ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][kmer_num-1]); //ref_abund[sort_ref[i]][pct09_idx]
 		}		
 
 		free(sort_ref);
