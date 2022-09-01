@@ -91,7 +91,7 @@ void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum,
 	kmerdb_index_t mco_map;		
 	//20220726 caution: unsigned int comp_sz, bug fix: unsigned int comp_sz*binnum excceed 2^32(unsigned int limit) and cause segmenation fault
 	//type convert need in below usage
-	size_t comp_sz = (1 << 4*COMPONENT_SZ);
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ);
 	int binnum = ceil((double)cofnum/BIN_SZ);	
 	// gnum in each bin each row
 	mco_map.row_bin_gnum = malloc((size_t)comp_sz*binnum*sizeof(unsigned int));
@@ -199,7 +199,7 @@ void cdb_kmerf2kmerdb(const char *mcodirname, const char *codirname, int cofnum,
 //linked list mco per bin per componenet
 mco_entry_stat_t** co2unitllmco(const char *codirname, int bin_sz, int bin_id, int component_id)
 {	 
-	unsigned int comp_sz = (1 << 4*COMPONENT_SZ) ;
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ) ;
 	mco_entry_stat_t** mco = calloc(comp_sz, sizeof(mco_entry_stat_t*) );	
 	gid_arr_llist_t* tmp; // for swap
 	char cofname[PATHLEN];
@@ -234,13 +234,13 @@ mco_entry_stat_t** co2unitllmco(const char *codirname, int bin_sz, int bin_id, i
 //regularize unit llmco(per bin per componenet)
 gidobj_t** llmco2arrmco(mco_entry_stat_t** llmco)
 {
-	unsigned int comp_sz = (1 << 4*COMPONENT_SZ) ;
+	size_t comp_sz = (1LL << 4*COMPONENT_SZ) ;
 	gidobj_t** arrmco = calloc(comp_sz, sizeof(gidobj_t*));
 	gidobj_t* current_blkpos_mapin_arrmco;
  
 	gid_arr_llist_t *tmpblk, *tmpptr;
 	
-  for(unsigned int i = 0; i< comp_sz ; i++ ){
+  for(size_t i = 0; i< comp_sz ; i++ ){
 
 		if(llmco[i] == NULL) continue; 
 		int arr_len = (int)llmco[i]->g_num + 1; //num of gid + each objalphbet count + total count
@@ -281,9 +281,9 @@ unsigned int write_unit_arrmco_file(const char* unitmcofname, gidobj_t** arrmco)
 {
   FILE *outf;
   if( (outf = fopen(unitmcofname,"wb") ) == NULL ) err(errno,"write_unit_arrmco_file()");
-  unsigned int comp_sz = (1 << 4*COMPONENT_SZ);
+  size_t comp_sz = (1LLU << 4*COMPONENT_SZ);
 	unsigned int validrow=0; 
-  for(unsigned int i = 0; i< comp_sz ; i++ ){
+  for(size_t i = 0; i< comp_sz ; i++ ){
     if(arrmco[i] != NULL){
 			validrow++;
 			fwrite(&i,sizeof(i),1,outf);
@@ -298,7 +298,7 @@ gidobj_t** read_unit_arrmco_file(const char *mco_fncode)
 {
 	FILE *inf;
 	if( (inf = fopen(mco_fncode ,"rb") ) == NULL ) err(errno,"read_unit_arrmco_file()");
-	unsigned int comp_sz = (1 << 4*COMPONENT_SZ);	
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ);	
 	unsigned int ind ;
 		
 	gidobj_t** arrmco = calloc(comp_sz, sizeof(gidobj_t*));
@@ -316,8 +316,8 @@ gidobj_t** read_unit_arrmco_file(const char *mco_fncode)
 
 void free_unit_arrmco(gidobj_t** unit_arrmco)
 {
-	unsigned int comp_sz = (1 << 4*COMPONENT_SZ);
-	for(unsigned int i = 0; i < comp_sz ; i++){
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ);
+	for(size_t i = 0; i < comp_sz ; i++){
 		if(unit_arrmco[i] != NULL)
 			free(unit_arrmco[i]);
 	}
@@ -327,7 +327,7 @@ void free_unit_arrmco(gidobj_t** unit_arrmco)
 size_t est_unitllmco_mem(void)
 {
   size_t mem_sz = 0;
-  unsigned int comp_sz = (1U << 4*COMPONENT_SZ) ;
+  size_t comp_sz = (1LLU << 4*COMPONENT_SZ) ;
   mem_sz = comp_sz
           *(  sizeof(mco_entry_stat_t*)
             + sizeof(mco_entry_stat_t)
@@ -347,7 +347,7 @@ size_t precise_est_unitllmco_mem(const char *co_dstat_fpath)
 	co_dstat_t co_dstat_readin;
 	fread( &co_dstat_readin, sizeof(co_dstat_t),1,co_stat_fp );
 
-	unsigned int comp_sz = (1U << 4*COMPONENT_SZ) ;
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ) ;
 	double ctx_spc_use_rate = (double)co_dstat_readin.all_ctx_ct
 		/co_dstat_readin.infile_num/co_dstat_readin.comp_num/comp_sz ;
 	printf("ctx_spc_use_rate=%lf\n",ctx_spc_use_rate);

@@ -276,7 +276,7 @@ int sketch_union()
  	fclose(co_stat_fp);
   fclose(co_stat_fp2);			
 	
-	unsigned int comp_sz = (1 << 4*COMPONENT_SZ);
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ);
 	llong* dict = (llong*)malloc(comp_sz/8);
 	unsigned int tmpcbdco;
 
@@ -357,7 +357,7 @@ int sketch_operate()
 	size_t *fco_pos = malloc(sizeof(size_t) * (co_dstat_origin.infile_num + 1) );
 	size_t *post_fco_pos = malloc(sizeof(size_t) * (co_dstat_origin.infile_num + 1) );
 	post_fco_pos[0] = 0;
-	unsigned int comp_sz = (1 << 4*COMPONENT_SZ);
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ);
   llong* dict = (llong*)malloc(comp_sz/8); //comp_sz bits = comp_sz/8 bytes ;make sure dict use 64 bits type
   unsigned int tmppanco;
 	for(int c=0; c< co_dstat_pan.comp_num; c++ ){
@@ -463,7 +463,7 @@ int uniq_sketch_union()
   fclose(co_stat_fp);
   fclose(co_stat_fp2);
 
-  unsigned int comp_sz = (1 << 4*COMPONENT_SZ);
+  size_t comp_sz = (1LLU << 4*COMPONENT_SZ);
   llong* dict = (llong*)malloc(comp_sz/8); // dictionary for kmer exists or not
 	llong* dict2 = (llong*)malloc(comp_sz/8);// dictionary for kmer duplicates (in >=2 genomes) or not
   unsigned int tmpcbdco;
@@ -722,11 +722,10 @@ int combin_subset_pans(char* taxfile){
 	if(co_dstat_readin.infile_num != subset->gn)
 		err(errno,"combin_subset_pans():%s's genome number %d not matches %s's genome number %d",co_dstat_fpath,co_dstat_readin.infile_num,taxfile,subset->gn); 
 	free(co_dstat_fpath);	
-
 	mkdir(set_opt.outdir,0777);
 	char tmppath[PATHLEN];	struct stat s; int outfn; llong all_ctx_ct = 0;
 	ctx_obj_ct_t *ctx_ct_list = calloc(subset->taxn,sizeof(ctx_obj_ct_t));	
-	unsigned int comp_sz = (1 << 4*COMPONENT_SZ);
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ);
   llong* dict = (llong*)malloc(comp_sz/8);
   size_t *outcombcoidx  = malloc(sizeof(size_t)* (subset->taxn+1));	
 
