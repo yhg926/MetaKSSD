@@ -361,6 +361,7 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 	else {  // normal or abundance mode 20220707
 
 		int num_threads =	seqfile_stat->infile_num > p_fit_mem ? p_fit_mem : 1;
+		int fcount = 0;
 #pragma omp parallel for num_threads(num_threads) reduction(+:all_ctx_ct) schedule(guided)
   	for(int i = 0; i< seqfile_stat->infile_num; i++){
 
@@ -393,11 +394,14 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 			 	co = fasta2co(seqfname,CO[tid],opt_val->pipecmd);
         ctx_ct_list[i] = wrt_co2cmpn_use_inn_subctx(cofname,co);			
        }
-			printf("decomposing %s\n",seqfname) ;					
+#pragma omp atomic
 			all_ctx_ct += ctx_ct_list[i] ;
-				
-		}
+#pragma omp atomic
+			fcount++;
 
+			printf("%d/%d decomposing %s\r",fcount,seqfile_stat->infile_num,seqfname) ;  //fflush(stdout);				
+		}
+		printf("\n"); //fflush(stdout);
 
 /*****combining all *.co.i into comb.co.i *****/
 #pragma omp parallel for num_threads(p_fit_mem) schedule(guided)
@@ -420,7 +424,7 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 				if( com_abund_fp == NULL) err(errno,"%s",tmpfname);
 			}
 
-      void *tmp_mem = malloc( LD_FCTR * 2 * (1 << (4*COMPONENT_SZ - CTX_SPC_USE_L)) *sizeof(unsigned int) );
+      void *tmp_mem = malloc( LD_FCTR * 2 * (1LLU << (4*COMPONENT_SZ - CTX_SPC_USE_L)) *sizeof(unsigned int) );
 //		unsigned short *tmpabund = malloc( sizeof(unsigned short) * (1 << (4*COMPONENT_SZ - CTX_SPC_USE_L)) );
 
       struct stat tmpstat;
@@ -591,7 +595,7 @@ void mco_co_dist( char *refmco_dname, char *qryco_dname, const char *distout_dir
     mco_dstat_readin.shuf_id, co_dstat_readin.shuf_id);	
 	
 	int ref_bin_num = mco_dstat_readin.infile_num / BIN_SZ;
-	int binsz; //comp_sz = (1 << 4*COMPONENT_SZ) ;	
+	int binsz; //comp_sz = (1LLU << 4*COMPONENT_SZ) ;	
   // set when use mco_co_dist_core() 
 	//mco_co_dist_t *shared_ctx_num = malloc( sizeof(mco_co_dist_t) * p_fit_mem );
 	//mco_co_dist_t *diff_obj_num = malloc( sizeof(mco_co_dist_t) * p_fit_mem );
@@ -759,7 +763,7 @@ void mco_cbd_co_dist(dist_opt_val_t *opt_val_in)
 
 	// dist file load batch management
 	int page_sz = sysconf(_SC_PAGESIZE); 
-	int comp_sz = (1 << 4*COMPONENT_SZ);
+	size_t comp_sz = (1LLU << 4*COMPONENT_SZ);
 	if( comp_sz % page_sz != 0 ) err(errno,"comp_sz %d is not multiple of page_sz %d ",comp_sz,page_sz );	
 
 	int num_unit_mem = mem_limit / (mco_dstat_readin.infile_num*sizeof(ctx_obj_ct_t) * page_sz);
@@ -951,7 +955,7 @@ void mco_cbdco_nobin_dist(dist_opt_val_t *opt_val_in) //currently used version(2
   }else err(EEXIST," mco_cbdco_nobin_dist():%s",onedist);
 
   int page_sz = sysconf(_SC_PAGESIZE);
-  size_t comp_sz = (1 << 4*COMPONENT_SZ);//20220730: old unsigned in comp_sz will overflow when COMPONENT_SZ >=8
+  size_t comp_sz = (1LLU << 4*COMPONENT_SZ);//20220730: old unsigned in comp_sz will overflow when COMPONENT_SZ >=8
   if( comp_sz % page_sz != 0 ) err(errno,"comp_sz %d is not multiple of page_sz %d ",comp_sz,page_sz );
 
   size_t maplength;
@@ -1141,7 +1145,7 @@ void mco_cbd_koc_compatible_dist(dist_opt_val_t *opt_val_in) //  latest version 
   }else err(EEXIST,"mco_cbd_koc_compatible_dist:%s",onedist);
   
 	int page_sz = sysconf(_SC_PAGESIZE);
-  size_t comp_sz = (1 << 4*COMPONENT_SZ);//20220730: old unsigned in comp_sz will overflow when COMPONENT_SZ >=8
+  size_t comp_sz = (1LLU << 4*COMPONENT_SZ);//20220730: old unsigned in comp_sz will overflow when COMPONENT_SZ >=8
   if( comp_sz % page_sz != 0 ) err(errno,"comp_sz %d is not multiple of page_sz %d ",comp_sz,page_sz );
 
 	size_t maplength;
