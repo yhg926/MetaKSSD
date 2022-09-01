@@ -394,11 +394,9 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 			 	co = fasta2co(seqfname,CO[tid],opt_val->pipecmd);
         ctx_ct_list[i] = wrt_co2cmpn_use_inn_subctx(cofname,co);			
        }
-#pragma omp atomic
 			all_ctx_ct += ctx_ct_list[i] ;
 #pragma omp atomic
 			fcount++;
-
 			printf("%d/%d decomposing %s\r",fcount,seqfile_stat->infile_num,seqfname) ;  //fflush(stdout);				
 		}
 		printf("\n"); //fflush(stdout);
