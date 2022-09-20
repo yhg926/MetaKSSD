@@ -31,6 +31,7 @@ typedef struct dist_opt_val
 	PFIELD outfields;   // set ouput fields
 	bool correction; // if do shared kmer count correction
 	bool abundance;
+	bool u; //dedup kmer or not
 	char pipecmd[PATHLEN]; //pipe command
 	char shared_kmerpath[PATHLEN];
 	bool keep_shared_kmer;

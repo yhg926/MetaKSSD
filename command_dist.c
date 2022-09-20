@@ -391,7 +391,10 @@ const char * run_stageI (dist_opt_val_t *opt_val, infile_tab_t *seqfile_stat,
 					opt_val->abundance = 0; //20220721:close abundance mode if .fas file exists			
 					printf("Warning: close abundance mode (-A) since non-fastq file input.\n");
 				}
-			 	co = fasta2co(seqfname,CO[tid],opt_val->pipecmd);
+				if(opt_val->u)
+					co = uniq_fasta2co(seqfname,CO[tid],opt_val->pipecmd);
+				else
+			 		co = fasta2co(seqfname,CO[tid],opt_val->pipecmd);
         ctx_ct_list[i] = wrt_co2cmpn_use_inn_subctx(cofname,co);			
        }
 			all_ctx_ct += ctx_ct_list[i] ;
@@ -958,10 +961,8 @@ void mco_cbdco_nobin_dist(dist_opt_val_t *opt_val_in) //currently used version(2
 
   size_t maplength;
   int bnum_infile;
-  FILE *cbd_fcode_comp_fp,*cbd_fcode_comp_index_fp;
-  struct stat cbd_fcode_stat;
   //make sure index file has extra element for computing last cofile length
-  size_t *fco_pos = malloc(sizeof(size_t) * (co_dstat_readin.infile_num + 1) );
+  //size_t *fco_pos = malloc(sizeof(size_t) * (co_dstat_readin.infile_num + 1) );
   size_t *mco_offset_index = malloc(sizeof(size_t) * comp_sz);
 #define MCOMM_SZ  442317172
   gidobj_t* mco_mem = malloc( sizeof(gidobj_t) * MCOMM_SZ ); //set to largest mmco

@@ -633,7 +633,7 @@ llong wrt_co2cmpn_use_inn_subctx(char* cofilename, llong *co)
   unsigned int count, wr = 0, newid;
 	for(count=0;count < hashsize; count++)
 	{
-		if( co[count] != 0 )
+		if( co[count] != 0 && co[count] < HIBITSET1 ) //20220916, k-mer deduplicated,old : if( co[count] != 0 ) 
 		{	
 			newid = (unsigned int)( co[count] >> comp_code_bits ) ;
 			fwrite( &newid, sizeof(unsigned int),1,outf[(int)( co[count] % component_num )] );
@@ -722,7 +722,106 @@ unsigned int keycount =0 ;
 	return co;
 }// end mt_shortreads2koc()
 
+llong * uniq_fasta2co(char* seqfname, llong *co, char * pipecmd) //20220916:mark duplicated k-mer
+{
+  llong tuple = 0LLU, crvstuple = 0LLU,
+    unituple, drtuple, pfilter;
 
+  memset(co,0LLU,hashsize*sizeof(llong));
+  char seqin_buff[ READSEQ_BUFFSZ + 1 ]; // seq infile buffer
+  FILE *infp;
+  char fas_fname[PATHLEN];
+  if(pipecmd[0] != '\0')
+    sprintf(fas_fname,"%s %s",pipecmd,seqfname);//other pipecmd except decompress cmd
+  else
+    sprintf(fas_fname,"%s %s",gzpipe_cmd,seqfname);
+
+  if( (infp=popen(fas_fname,"r")) == NULL ) err(errno,"fasta2co():%s",fas_fname);
+
+  int newLen =  fread(seqin_buff, sizeof(char),READSEQ_BUFFSZ,infp);
+  if(! (newLen >0) )  err(errno,"fastco():eof or fread error file=%s",seqfname);
+
+  llong base = 1; char ch; int basenum;
+  unsigned int keycount = 0;
+  // core function begin
+  for(int pos = 0; pos <= newLen; pos++)
+  {
+    if(pos == newLen){
+        newLen =  fread(seqin_buff, sizeof(char),READSEQ_BUFFSZ,infp);
+      if(newLen > 0)
+        pos = 0;
+      else break;
+    };
+    ch = seqin_buff[pos];
+    basenum = Basemap[(int)ch];
+
+    if(basenum != DEFAULT) //make sure basenum is not negative
+    {
+      tuple = ( ( tuple<< 2 ) | (llong)basenum ) & tupmask ;
+      crvstuple = ( crvstuple >> 2 ) + (((llong)basenum^3LLU) << crvsaddmove);
+      base++;
+    }
+    else if ( (ch == '\n') || (ch == '\r') ) { continue;}
+    else if (isalpha(ch)){ base=1; continue; }
+    else if ( ch == '>' )
+    {
+      while( (pos < newLen ) && ( seqin_buff[pos] != '\n' ) )
+      {
+        if (pos < newLen - 1)
+          pos++;
+        else
+        {
+          newLen = fread(seqin_buff, sizeof(char),READSEQ_BUFFSZ,infp);
+          if(newLen > 0) pos = -1; // pos = 0 is bug ? should be pos = -1 , since continue and pos++
+          else err(errno,"fasta2co(): can not find seqences head start from '>' %d",newLen);
+        };
+      };
+      base = 1;
+      continue;
+    }
+    else {
+    //  warnx("ignorn illegal charactor%c \n",ch);
+      base=1;
+      continue;
+    };
+
+    if( base > TL ) // if(!(base < TL))
+    {
+      //make sure unituple == min(tuple,crvstuple);
+      unituple = tuple < crvstuple ? tuple:crvstuple;
+      //only for 64bits Kmer storage ,
+      //important !!!! make sure is right
+      int dim_tup = ((unituple & domask) >> ( (half_outctx_len)*2 ) ) ;
+      pfilter = dim_shuf_arr[dim_tup];
+      if( ( pfilter >= dim_end) || (pfilter < dim_start ) ) continue;
+      pfilter = pfilter - dim_start; //add 190307: prevent pfilter > MIN_SUBCTX_DIM_SMP_SZ when dim_start >0
+      drtuple = ( ( (unituple & undomask) //left half outer ctx
+              + ( ( unituple & ( ( 1LLU<< ( half_outctx_len*2) ) - 1)) << (TL*2 - half_outctx_len*4) ) )
+              >> ( drlevel*4 ) ) // subctx dim reduced
+              +  pfilter ; //  subctx dim after reduction
+
+      unsigned int i,n ;
+      for(i=0;i<hashsize;i++)
+      {
+        n = HASH(drtuple,i,hashsize);
+        if (co[n] == 0)
+        {
+          co[n] = drtuple;
+          keycount++;
+          if( keycount > hashlimit)
+            err(errno,"the context space is too crowd, try rerun the program using -k%d", half_ctx_len + 1);
+          break;
+        }
+        else if ( (co[n] | HIBITSET1) == (drtuple | HIBITSET1) ) {
+					co[n] |= HIBITSET1 ;
+          break;
+				}
+      };//end kmer hashing
+    };
+  };//end file hashing
+    pclose(infp);
+  return co;
+};//end func
 
 
 

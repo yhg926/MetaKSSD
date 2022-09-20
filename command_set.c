@@ -776,7 +776,9 @@ int combin_subset_pans(char* taxfile){
 				}
 				outfn++;
 				outcombcoidx[outfn]= offset;
+				printf("%d/%d species pangenome grouped\r",t,subset->taxn);
 		}
+		printf("\n");
 		fclose(tmpfh);
 		//write unions idx to combin_subset_pans combco.idx file
 		sprintf(tmppath,"%s/%s.%d",set_opt.outdir,idx_prefix,c);

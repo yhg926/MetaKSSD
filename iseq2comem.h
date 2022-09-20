@@ -11,6 +11,7 @@ extern void seq2co_global_var_initial(void);
 //llong * bgzfasta2co(char* seqfname,char seqin_buff[READSEQ_BUFFSZ], llong *co);
 llong * mmpfasta2co(char* seqfname, llong *co);
 llong * fasta2co(char* seqfname,llong *co,char * pipecmd);
+llong * uniq_fasta2co(char* seqfname,llong *co,char * pipecmd);
 llong * fastq2co(char* seqfname, llong *co, char * pipecmd,int Q, int M );
 llong * fastq2koc (char* seqfname, llong *co, char * pipecmd, int Q);
 llong * mt_shortreads2koc (char* seqfname, llong *co, char *pipecmd,int p);
