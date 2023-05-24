@@ -282,6 +282,7 @@ typedef unsigned int ctx_obj_ct_t;
 #define H1(K,HASH_SZ) ((K)%(HASH_SZ))
 #define H2(K,HASH_SZ) ( 1 + (K) % ( (HASH_SZ) - 1 ) )
 #define HASH(K,I,HASH_SZ) ( ( H1(K,HASH_SZ) + I * H2(K,HASH_SZ) ) % HASH_SZ )
+#define LOG2(X) ((unsigned) (8*sizeof (unsigned long long) - __builtin_clzll((X)) - 1))
 
 #endif
 
