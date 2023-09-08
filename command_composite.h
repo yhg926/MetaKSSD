@@ -20,6 +20,7 @@ typedef struct composite_opt
 	int b; //write out abundance binary vector (1) or not (0)
 	int i; // index abundance binary vectors (1) or not (0)
 	int s;
+	int d; // read abv or not
 	int p; //threads
 	char refdir[PATHLEN]; 
 	char qrydir[PATHLEN];
@@ -37,4 +38,6 @@ int comparator (const void*, const void*);
 int get_species_abundance (composite_opt_t *);
 int index_abv (composite_opt_t *);
 int abv_search  (composite_opt_t *composite_opt);
+int read_abv (composite_opt_t *composite_opt);
+
 #endif 

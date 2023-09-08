@@ -38,6 +38,7 @@ static struct argp_option opt_composite[] =
 	{"binVec",'b',0,0,"Output species abundances in Binary Vector format (.abv) \v",5},
 	{"idxbv",'i',0,0,"build index of abundance Binary Vector \v",6},
 	{"search",'s',"<0-2>",0,"search for similar abundance Binary Vectors using L1norm(1)/L2norm(2)/cosine(0)\v",7},
+	{"readabv",'d',0,0,"Read .abv file \v",8},
   { 0 }
 };
 
@@ -52,6 +53,7 @@ composite_opt_t composite_opt ={
 	.b = 0, //write out abundance binary vector (1) or not (0)
 	.i = 0, // index abundance binary vectors (1) or not (0)
 	.s = -1, 	
+	.d = 0, // read .abv file
 	.p = 1,
 	.refdir[0] = '\0',
 	.qrydir[0] = '\0',
@@ -81,6 +83,11 @@ static error_t parse_composite(int key, char* arg, struct argp_state* state) {
 		{
 				composite_opt.s = atoi(arg);
 				break;
+		}
+		case 'd':
+		{
+			composite_opt.d = 1;
+			break;
 		}
 		case 'p':
 		{
@@ -167,16 +174,47 @@ int cmd_composite(struct argp_state* state)
 		}
 		else printf("\vUsage: kssd composite -r <ref> < mode: -q | -i | -s >\n\v");
 		return 1;
-	}	
+	}
+	else if(composite_opt.d){
+		if(composite_opt.remaining_args < 1)	printf("\vUsage: kssd composite -d <query.abv>\n\v");
+		else return read_abv (&composite_opt);	
+	}
 	else{
 		printf("\vUsage: kssd composite -r <ref> < mode: -q | -i | -s >\n\v");
 		return -1;
 	}
 }//cmd_composite();
 
+
+int read_abv (composite_opt_t *composite_opt){
+	for(int i =0; i<composite_opt->num_remaining_args;i++){
+    const char *ext = strrchr(composite_opt->remaining_args[i],'.');
+    if(strcmp(ext + 1, binVec_suffix) != 0){
+      printf("%dth argument %s is not a .abv file, skipped\n",i,composite_opt->remaining_args[i]);
+      continue;
+    }
+
+		struct stat st;
+    stat(composite_opt->remaining_args[i], &st);
+
+    binVec_t tmp_abv ;
+		FILE *abvfh;;
+    if(( abvfh = fopen(composite_opt->remaining_args[i],"rb") ) == NULL) err(errno, "read_abv():%s",composite_opt->remaining_args[i]);
+
+		for(int l=0; l< st.st_size; l+=sizeof(binVec_t)) {
+	    fread(&tmp_abv,sizeof(binVec_t),1,abvfh);
+			printf("%d\t%f\n",tmp_abv.ref_idx,tmp_abv.pct);
+		}
+
+		fclose(abvfh);
+	}
+	return 1;
+}
+
 float *tmp_measure;
-int abv_search	(composite_opt_t *composite_opt){
-		
+typedef struct xny_pct { float x; float y;} xny_pct_t ; 
+
+int abv_search	(composite_opt_t *composite_opt){		
 	char* abv_fpath = malloc(PATHLEN);		
 	FILE *abvfh,*namefh,*abunMtx_idxfh,*abunMtx_fh,*y_l2n_fh;
 	//read sample names
@@ -188,7 +226,7 @@ int abv_search	(composite_opt_t *composite_opt){
 		tmpfname[abv_fn][strcspn(tmpfname[abv_fn], "\n")] = 0;
 		if (abv_fn == size -1){
 			size+=100;
-		  realloc( tmpfname, size * PATHLEN);
+		  tmpfname = realloc( tmpfname, size * PATHLEN);
 		}		
 		abv_fn++;	
 	}
@@ -217,22 +255,25 @@ int abv_search	(composite_opt_t *composite_opt){
 	binVec_t *abunMtx = malloc(st.st_size);
 	if((abunMtx_fh = fopen(abv_fpath,"rb") ) == NULL) err(errno, "abv_search():%s",abv_fpath);
 	fread(abunMtx,sizeof(binVec_t),st.st_size/sizeof(binVec_t),abunMtx_fh);
-
 	fclose(abunMtx_fh);
+	
+	xny_pct_t *xny_pct ;// for l1norm calculation
 
 	int *abv_ids = malloc(sizeof(int) * abv_fn);// matched abv ids
-	int n_abv_match = 0; //num of matched abv 	
 #define DFLT (-2) // set default measure, value should not in the range of l1norm l2norm cosine   	
 	tmp_measure = malloc(sizeof(float) * abv_fn);
-	for(int i =0; i<composite_opt->num_remaining_args;i++){	
+	if(composite_opt->s == 1) xny_pct = malloc(sizeof(xny_pct_t) *abv_fn);
+
+	for(int i =0; i<composite_opt->num_remaining_args;i++){
 		const char *ext = strrchr(composite_opt->remaining_args[i],'.');
 		if(strcmp(ext + 1, binVec_suffix) != 0){
 			printf("%dth argument %s is not a .abv file, skipped\n",i,composite_opt->remaining_args[i]);
 			continue;
 		}
 
+		int n_abv_match = 0; //num of matched abv
 		sprintf(abv_fpath,"%s/%s/%s", composite_opt->refdir,binVec_dirname,composite_opt->remaining_args[i]);
-		stat(abv_fpath, &st);			
+		stat(abv_fpath, &st);		
 	
 		int abv_len = st.st_size / sizeof(binVec_t);
 		binVec_t *tmp_abv = malloc(sizeof(binVec_t)*(abv_len+1));	
@@ -240,6 +281,7 @@ int abv_search	(composite_opt_t *composite_opt){
 		fread(tmp_abv,sizeof(binVec_t),abv_len,abvfh);
 			
 		for(int i = 0; i<abv_fn ; i++) tmp_measure[i] = DFLT;
+		if(composite_opt->s == 1) memset(xny_pct,0, sizeof(xny_pct_t) *abv_fn );
 		
 		float xl2n = 0; //query l2norm ||x|| 
 		for(int d = 0; d< abv_len; d++){
@@ -252,16 +294,26 @@ int abv_search	(composite_opt_t *composite_opt){
 					abv_ids[n_abv_match] = abunMtx[j].ref_idx;
 					n_abv_match++;
 				}
-				if(composite_opt->s == 1)
+				if(composite_opt->s == 1){
 					tmp_measure[abunMtx[j].ref_idx] += (float)fabs(abunMtx[j].pct - tmp_abv[d].pct);
+					xny_pct[abunMtx[j].ref_idx].x += tmp_abv[d].pct;
+					xny_pct[abunMtx[j].ref_idx].y += abunMtx[j].pct;
+				}
 				else if (composite_opt->s == 2)
 					tmp_measure[abunMtx[j].ref_idx] += (abunMtx[j].pct - tmp_abv[d].pct) * (abunMtx[j].pct - tmp_abv[d].pct);
 				else //cosine
 					tmp_measure[abunMtx[j].ref_idx] += abunMtx[j].pct * tmp_abv[d].pct;					
 			}
 		}//dimension
+		if(composite_opt->s == 0) {
+			for(int n = 0; n < n_abv_match; n++)
+				tmp_measure[abv_ids[n]] = tmp_measure[abv_ids[n]] / (sqrt(xl2n)*y_l2n[abv_ids[n]]) ;
+		}		
 		//sort
 		if(composite_opt->s == 1) {
+			for(int n = 0; n < n_abv_match; n++) 
+				tmp_measure[abv_ids[n]] += (2*100 - xny_pct[abv_ids[n]].x - xny_pct[abv_ids[n]].y); // 2*100 bcs abv has been scaled to 100
+
 			qsort(abv_ids,n_abv_match,sizeof(int),comparator_measure);
 			for(int n = 0; n < n_abv_match; n++) printf("%s\t%s\t%lf\n",composite_opt->remaining_args[i],tmpfname[abv_ids[n]],tmp_measure[abv_ids[n]]);
 		}
@@ -271,18 +323,19 @@ int abv_search	(composite_opt_t *composite_opt){
 		}
 		else{
 			qsort(abv_ids,n_abv_match,sizeof(int),comparator_measure);
-			for(int n = n_abv_match -1 ; n >= 0; n--) printf("%s\t%s\t%lf\n",composite_opt->remaining_args[i],tmpfname[abv_ids[n]],tmp_measure[abv_ids[n]]/(sqrt(xl2n)*y_l2n[abv_ids[n]]) );	
+			for(int n = n_abv_match -1 ; n >= 0; n--) printf("%s\t%s\t%lf\n",composite_opt->remaining_args[i],tmpfname[abv_ids[n]],tmp_measure[abv_ids[n]]);	
 		}
 
 		fclose(abvfh);
 		free(tmp_abv);
-	}//for
+	}//for remaining_args[i]
 
 	free(tmp_measure);
 	free(tmpfname);
 	free(abunMtx);
 	free(abunMtx_idx);
 	free(y_l2n);
+	if(composite_opt->s == 1) free(xny_pct);
 
 	return 1;
 }
@@ -333,8 +386,8 @@ int index_abv (composite_opt_t *composite_opt){
 			for(int i =0; i<abv_len ;i++){
 				fread(&binVec_tmp , sizeof(binVec_t), 1,abvfh);
 				 y_l2n+= binVec_tmp.pct*binVec_tmp.pct;
-
-				realloc((binVec_t *)abunMtx_dynamic[binVec_tmp.ref_idx], sizeof(binVec_t) * (abunMtx_count[binVec_tmp.ref_idx] + 1) );
+//bug fixed: realloc without assignment cause memory leak: realloc((binVec_t *)abunMtx_dynamic[binVec_tmp.ref_idx], sizeof(binVec_t) * (abunMtx_count[binVec_tmp.ref_idx] + 1) );			
+				abunMtx_dynamic[binVec_tmp.ref_idx] = realloc((binVec_t *)abunMtx_dynamic[binVec_tmp.ref_idx], sizeof(binVec_t) * (abunMtx_count[binVec_tmp.ref_idx] + 1) );
         abunMtx_dynamic[binVec_tmp.ref_idx][abunMtx_count[binVec_tmp.ref_idx]].ref_idx = abv_fcnt ;
 				abunMtx_dynamic[binVec_tmp.ref_idx][abunMtx_count[binVec_tmp.ref_idx]].pct = binVec_tmp.pct;
 				abunMtx_count[binVec_tmp.ref_idx]++;
