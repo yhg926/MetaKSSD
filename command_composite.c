@@ -272,7 +272,9 @@ int abv_search	(composite_opt_t *composite_opt){
 		}
 
 		int n_abv_match = 0; //num of matched abv
-		sprintf(abv_fpath,"%s/%s/%s", composite_opt->refdir,binVec_dirname,composite_opt->remaining_args[i]);
+		if( strchr(composite_opt->remaining_args[i],'/') != NULL ) // absolute path
+			abv_fpath = composite_opt->remaining_args[i];
+		else sprintf(abv_fpath,"%s/%s/%s", composite_opt->refdir,binVec_dirname,composite_opt->remaining_args[i]);
 		stat(abv_fpath, &st);		
 	
 		int abv_len = st.st_size / sizeof(binVec_t);
@@ -393,7 +395,6 @@ int index_abv (composite_opt_t *composite_opt){
         abunMtx_dynamic[binVec_tmp.ref_idx][abunMtx_count[binVec_tmp.ref_idx]].ref_idx = abv_fcnt ;
 				abunMtx_dynamic[binVec_tmp.ref_idx][abunMtx_count[binVec_tmp.ref_idx]].pct = binVec_tmp.pct;
 				abunMtx_count[binVec_tmp.ref_idx]++;
-				//printf("%s\t%d\t%f\n",dirent->d_name,binVec_tmp.ref_idx,binVec_tmp.pct)	;										
 			}
 			fclose(abvfh);						
 
@@ -579,7 +580,9 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 		
 //if binary vector
 		if(composite_opt->b){
-			sprintf(tmpfname,"%s/%s",composite_opt->refdir,binVec_dirname);
+			if(strlen(composite_opt->outdir) < 2) //here just to avoid being  "./"
+				sprintf(tmpfname,"%s/%s",composite_opt->refdir,binVec_dirname);
+			else strcpy(tmpfname,composite_opt->outdir);// if -o set, abv will be in outdir, not binVec_dirname
 			mkdir(tmpfname,0777);
 			sprintf(tmpfname,"%s/%s/%s.%s",composite_opt->refdir,binVec_dirname,basename(qryname[qn]),binVec_suffix);
 			if( (tmpfp = fopen(tmpfname,"wb"))==NULL) err(errno,"get_species_abundance():%s",tmpfname);
