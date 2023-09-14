@@ -12,7 +12,7 @@ while(<$meta>){
 	chomp;
 	($run,$bsmp,$orgnism) = (split /\,/);
 	if((defined $bsmp) and (defined $orgnism)) {
-		$hash{$run} = $bsmp.'\t'.$orgnism;
+		$hash{$run} = $bsmp."\t".$orgnism;
 	}
 }
 close($meta);
