@@ -583,11 +583,11 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 		
 //if binary vector
 		if(composite_opt->b){
-			if(strlen(composite_opt->outdir) < 2) //here just to avoid being  "./"
+			if(strlen(composite_opt->outdir) < 3) // outdir not set, value:\"./\"
 				sprintf(tmpfname,"%s/%s",composite_opt->refdir,binVec_dirname);
 			else strcpy(tmpfname,composite_opt->outdir);// if -o set, abv will be in outdir, not binVec_dirname
 			mkdir(tmpfname,0777);
-			sprintf(tmpfname,"%s/%s/%s.%s",composite_opt->refdir,binVec_dirname,basename(qryname[qn]),binVec_suffix);
+			sprintf(tmpfname,"%s/%s.%s",tmpfname,basename(qryname[qn]),binVec_suffix);
 			if( (tmpfp = fopen(tmpfname,"wb"))==NULL) err(errno,"get_species_abundance():%s",tmpfname);
 	
 		}
@@ -627,7 +627,7 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 			for(int i = 0; i< num_pass;i++){
 				//normalize //binVec[i].pct = binVec[i].pct / binVecsum ;
 				binVec[i].pct = ( binVec[i].pct - 1)*100/(binVecsum - num_pass) ;
-				printf("%d\t%f\n",binVec[i].ref_idx, binVec[i].pct);
+				//printf("%d\t%f\n",binVec[i].ref_idx, binVec[i].pct);
 			}
 			fwrite(binVec,sizeof(binVec_t),num_pass,tmpfp);
 			fclose(tmpfp);
