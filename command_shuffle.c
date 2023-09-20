@@ -127,7 +127,7 @@ int cmd_shuffle(struct argp_state* state)
   argv[0] = argv0;
   state->next += argc - 1;
 	
-//	printf("%s shuffle: k = %d , halfCtxLen = %d\n",state->name,dim_shuffle_stat->k,dim_shuffle_stat->subk);
+//	printf("%s shuffle: k = %d , halfCtxLen = %d\n",state->name,dim_shuffle_stat.k,dim_shuffle_stat.subk);
 	if(argc >1)	
   	return write_dim_shuffle_file(&dim_shuffle_stat, shuf_out_file_prefix) ;
 	else
@@ -207,8 +207,8 @@ int write_dim_shuffle_file(dim_shuffle_stat_t* dim_shuffle_stat, char *outfile_p
 	fclose(shuf_out);
 	free(shuffled_dim);
 
-	//printf("kssd shuffle: shuf_id=%d, k = %d, halfCtxLen = %d, level= %d\n",
-	//			dim_shuffle_stat->id, dim_shuffle_stat->k,dim_shuffle_stat->subk,dim_shuffle_stat->drlevel);
+	printf("kssd shuffle: shuf_id=%d, k = %d, halfCtxLen = %d, level= %d\n",
+				dim_shuffle_stat->id, dim_shuffle_stat->k,dim_shuffle_stat->subk,dim_shuffle_stat->drlevel);
 	return ret;
 };
 

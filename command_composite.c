@@ -574,7 +574,9 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 		}// for c
 
 		// sort ref_abund
+#ifndef MIN_KM_S
 #define MIN_KM_S 6 // minimal kmer share for a ref genome		
+#endif
 #define ST_PCTL (0.98) //start percentile
 #define ED_PCTL (0.99) //end percentile
 		int *sort_ref = malloc(ref_dstat.infile_num* sizeof(int));
@@ -599,7 +601,7 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 			qsort(ref_abund[sort_ref[i]] + 1, kmer_num, sizeof(int),comparator);
 //average
 			int sum = 0; 
-			for(int n = 1; n <= kmer_num; n++) sum+= ref_abund[sort_ref[i]][n];
+			for(int n = 1; n <= kmer_num; n++) sum += ref_abund[sort_ref[i]][n];
 //median:real median is (kmer_num + 1)/2, but we ignore the last(most abundant) k-mer so use			
 			int median_idx = kmer_num /2;
 			int pct09_idx = kmer_num  * ST_PCTL ;
@@ -611,7 +613,7 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 			}
 //set binary vector
 			if(composite_opt->b){
-				if (ref_abund[sort_ref[i]][median_idx] > 1 && kmer_num > 7){ //  threshold for abv
+				if (ref_abund[sort_ref[i]][median_idx] > 1 && kmer_num > MIN_KM_S + 1){ //  threshold for abv
 					binVec[num_pass].ref_idx = sort_ref[i];
 					binVec[num_pass].pct = (float)lastsum/lastn;
 					binVecsum += binVec[num_pass].pct;
@@ -619,7 +621,7 @@ int get_species_abundance (composite_opt_t * composite_opt) { //by uniq kmer in 
 				}
 			}
 			else{
-				printf("%s\t%s\t%d\t%f\t%f\t%d\t%d\n",qryname[qn],refname[sort_ref[i]], kmer_num, (float)sum/kmer_num,(float)lastsum/lastn,ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][kmer_num-1]);
+				printf("%s\t%s\t%d\t%f\t%f\t%d\t%d\n",qryname[qn],refname[sort_ref[i]], kmer_num, (float)sum/kmer_num,(float)lastsum/lastn,ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][kmer_num]);
 			}		
 		}
 //output binary vector
