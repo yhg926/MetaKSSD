@@ -27,6 +27,7 @@ while(<$abv>){
 		print $abvname,"\t",$measure,"\t",$colname2,"\t",$colname3,"\t",$colname4,"\n";
 	}
 	else{
+		$abvname=~s/\.fastq//g;
 		$abvname=~s/\.abv$//;
 		print $abvname,"\t",$measure,"\t";
 		if(!exists $hash{$abvname}){
