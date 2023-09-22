@@ -1,7 +1,8 @@
+#!/usr/bin/perl
 use warnings;
 use diagnostics;
 if(@ARGV!=2){
-	die "*.pl <abv search output> <All_metag.run_proj_sample_orgnism.cs>";
+	die "*.pl <abv search output> <All_metag.run_proj_sample_orgnism.csv>";
 }
 
 open $meta,$ARGV[1] || die "cant open $ARGV[1]:$!";
