@@ -334,6 +334,7 @@ int co_reverse2kmer(reverse_opt_val_t *opt_val)
 		// file open <-here
 		char *filename;
 		(filename = strrchr(cofname[k],'/') ) ? ++filename : (filename = cofname[k]);
+		replaceChar(filename, ' ', '_');
 		char fullname[PATHLEN];
 		sprintf(fullname,"%s/%s",opt_val->outdir,filename);
 		FILE *kmerf;
