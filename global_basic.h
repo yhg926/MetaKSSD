@@ -250,7 +250,7 @@ static inline mmp_any_t mmp_any (char *fname)
 };
 
 
-
+void replaceChar(char *str, char oldChar, char newChar);
 
 int str_suffix_match(char *str, const char *suf); 
 const char * get_pathname(const char *fullpath, const char *suf);

@@ -474,4 +474,11 @@ int nextPrime(int n){
     }
 }
 
-
+void replaceChar(char *str, char oldChar, char newChar) {
+    while (*str != '\0') {
+        if (*str == oldChar) {
+            *str = newChar;
+        }
+        str++;
+    }
+}
