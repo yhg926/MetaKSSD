@@ -170,9 +170,9 @@ int cmd_composite(struct argp_state* state)
 			return index_abv (&composite_opt);
 		else if (composite_opt.s != -1){
 			if( composite_opt.s >=0 && composite_opt.s <3 && composite_opt.remaining_args >0 )	return abv_search(&composite_opt);
-			else printf("\vUsage: kssd composite -r <ref> -s <0|1|2> <query.abv>\n\v");
+			else printf("\vUsage: metakssd composite -r <ref> -s <0|1|2> <query.abv>\n\v");
 		}
-		else printf("\vUsage: kssd composite -r <ref> < mode: -q | -i | -s >\n\v");
+		else printf("\vUsage: metakssd composite -r <ref> < mode: -q | -i | -s >\n\v");
 		return 1;
 	}
 	else if(composite_opt.d){
@@ -180,7 +180,7 @@ int cmd_composite(struct argp_state* state)
 		else return read_abv (&composite_opt);	
 	}
 	else{
-		printf("\vUsage: kssd composite -r <ref> < mode: -q | -i | -s >\n\v");
+		printf("\vUsage: metakssd composite -r <ref> < mode: -q | -i | -s >\n\v");
 		return -1;
 	}
 }//cmd_composite();
