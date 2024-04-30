@@ -4,7 +4,7 @@
 #include <string.h>
 #include "global_basic.h"
   /** Global Options **/
-const char *argp_program_version =  "kssd version 2.21";
+const char *argp_program_version =  "metakssd version 2.21";
 const char *argp_program_bug_address = "yhg926@gmail.com";
 //argp_err_exit_status = 1;
 
