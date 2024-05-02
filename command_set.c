@@ -625,7 +625,7 @@ void print_gnames(){
 
 	
 	for(int i=0; i<co_dstat_readin.infile_num; i++ ){
-		printf("%s\n",tmpname[i]);
+		printf("%d\t%s\n",tmp_ctx_ct[i],tmpname[i]);
 	}
 	free(tmp_ctx_ct);
   free(tmpname);
