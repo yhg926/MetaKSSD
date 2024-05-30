@@ -19,7 +19,30 @@ kssd composite -r <markerdb_L3K11> -q <sample1_sketch> > <species_coverage.tsv>
 # abundance normalization
 perl possion.kssd2out.pl < species_coverage.tsv > <minimum overlapped k-mer > > <species relative abundance profile>
 ```
-# 3 build custom MarkerDB
+# 3 Abundance Vector Searching 
+
+```
+#generate abundance vector to path 
+metakssd composite -r <markerdb> -q <metagenome sketch> -b -o <path>
+```
+To retrieve abundance vectors similar to an abundance vector "input.abv" from the database "markerdb", we utilized the following command:
+
+```
+metakssd composite -r <markerdb> -s<0 or 1> <input.abv>
+```
+Here, the options -s0 and -s1 enable searching based on L1 norm and cosine similarity, respectively.
+
+# 4 Index abundance vector database 
+```
+#make folder named abundance_Vec under your markerdb path
+mkdir -p <markerdb path>/abundance_Vec
+#collect all *.abv to the folder
+cp *.abv <markerdb path>/abundance_Vec
+#index 
+metakssd composite -r <markerdb path> -i
+```
+
+# 5 build custom MarkerDB
 ```
 # sketching reference genomes
 metakssd dist -L <*.shuf> -o <L3K11_sketch> <all genomes Dir>
