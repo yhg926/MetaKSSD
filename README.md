@@ -11,7 +11,7 @@ cd MetaKSSD &&
 make
 ```
 # 2. Metagenome profiling
-make sure you already have an <markerdb>. If not, skip to [build custom MarkerDB](#5-build-custom-MarkerDB) to create one.
+make sure you already have an MarkerDB. If not, skip to [build custom MarkerDB](#5-build-custom-MarkerDB) to create one.
 ```
 #sketching with k-mer counts tracking
 metakssd dist -L <*.shuf> -A -o <sample1_sketch> <sample1.fastq>
