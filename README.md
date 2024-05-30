@@ -4,14 +4,14 @@ MetaKSSD is version 2 of KSSD (K-mer substring space sampling/shuffling Decompos
 
 K-mer substring space decomposition (KSSD) facilitates highly efficient genome sketching and enables lossless sketch operations including union, intersection and subtraction [doi.org/10.1186/s13059-021-02303-4]. Building upon the KSSD framework, MetaKSSD introduce a novel feature that tracks k-mer counts within the sketch. Leveraging these foundational functionalities, MetaKSSD further innovates in the methods of taxonomic marker database (MarkerDB) construction, metagenome taxonomic profiling and profile searching. 
 
-# 1 Installation 
+# 1. Installation 
 ```
 git clone https://github.com/yhg926/MetaKSSD.git &&
 cd MetaKSSD &&
 make
 ```
-# 2 Metagenome profiling
-make sure you already have an <markerdb>. If not, skip to (#5-build-custom-MarkerDB) to create one.
+# 2. Metagenome profiling
+make sure you already have an <markerdb>. If not, skip to [build custom MarkerDB](#5-build-custom-MarkerDB) to create one.
 ```
 #sketching with k-mer counts tracking
 metakssd dist -L <*.shuf> -A -o <sample1_sketch> <sample1.fastq>
@@ -20,8 +20,8 @@ kssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
 # abundance normalization
 perl possion.kssd2out.pl < species_coverage.tsv > <minimum overlapped k-mer > > <species relative abundance profile>
 ```
-# 3 Abundance Vector Searching 
-Make sure you already have an indexed abundance vector database. If not, skip to (#4-Index-abundance-vector-database) to create one
+# 3. Abundance Vector Searching 
+Make sure you already have an indexed abundance vector database. If not, skip to [Index abundance vector database](#4-Index-abundance-vector-database) to create one
 ```
 #generate abundance vector in a given path 
 metakssd composite -r <markerdb> -q <metagenome sketch> -b -o <path>
@@ -33,7 +33,7 @@ metakssd composite -r <markerdb> -s<0 or 1> <path/input.abv>
 ```
 Here, the options -s0 and -s1 enable searching based on L1 norm and cosine similarity, respectively.
 
-# 4 Index abundance vector database 
+# 4. Index abundance vector database 
 ```
 #make folder named abundance_Vec under your markerdb path
 mkdir -p <markerdb path>/abundance_Vec
@@ -43,7 +43,7 @@ cp *.abv <markerdb path>/abundance_Vec
 metakssd composite -r <markerdb path> -i
 ```
 
-# 5 build custom MarkerDB
+# 5. build custom MarkerDB
 ```
 # sketching reference genomes
 metakssd dist -L <*.shuf> -o <L3K11_sketch> <all genomes Dir>
