@@ -21,7 +21,7 @@ kssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
 perl possion.kssd2out.pl < species_coverage.tsv > <minimum overlapped k-mer > > <species relative abundance profile>
 ```
 # 3. Abundance Vector Searching 
-Make sure you already have an indexed abundance vector database. If not, skip to [Index abundance vector database](#4-Index-abundance-vector-database) to create one
+
 ```
 #generate abundance vector in a given path 
 metakssd composite -r <markerdb> -q <metagenome sketch> -b -o <path>
@@ -32,6 +32,7 @@ To retrieve abundance vectors similar to an abundance vector "input.abv" from th
 metakssd composite -r <markerdb> -s<0 or 1> <path/input.abv>
 ```
 Here, the options -s0 and -s1 enable searching based on L1 norm and cosine similarity, respectively.
+Make sure you already have an indexed abundance vector database. If not, skip to [Index abundance vector database](#4-Index-abundance-vector-database) to create one
 
 # 4. Index abundance vector database 
 ```
