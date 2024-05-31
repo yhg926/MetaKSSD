@@ -1,1 +1,1 @@
-*/combco.0 filter=lfs diff=lfs merge=lfs -text
+combco.0 filter=lfs diff=lfs merge=lfs -text
