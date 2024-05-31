@@ -11,7 +11,13 @@ cd MetaKSSD &&
 make
 ```
 # 2. Metagenome profiling
-make sure you already have a MarkerDB. If not, skip to [build custom MarkerDB](#5-build-custom-MarkerDB) to create one.
+make sure you already have a MarkerDB. If not, you can download by:
+```
+# sketched using L3K11.shuf 
+wget http://www.genomesketchub.com/download/markerdb.L3K11_gtdb_r214.tar.gz
+tar xf markerdb.L3K11_gtdb_r214.tar.gz
+```
+or skip to [build custom MarkerDB](#5-build-custom-MarkerDB) to create one.
 ```
 #sketching with k-mer counts tracking
 metakssd dist -L <*.shuf> -A -o <sample1_sketch> <sample1.fastq>
@@ -32,7 +38,14 @@ To retrieve abundance vectors similar to an abundance vector "input.abv" from th
 metakssd composite -r <markerdb> -s<0 or 1> <path/input.abv>
 ```
 Here, the options -s0 and -s1 enable searching based on L1 norm and cosine similarity, respectively.
-Make sure you already have an indexed abundance vector database. If not, skip to [Index abundance vector database](#4-Index-abundance-vector-database) to create one
+Make sure you already have an indexed abundance vector database. If not, you can download by:
+```
+#sketched using L3K11.shuf 
+wget http://www.genomesketchub.com/download/markerdb.abvdb.L3K11_gtdb_r214.tar.gz
+tar xf markerdb.abvdb.L3K11_gtdb_r214.tar.gz
+```
+
+or skip to [Index abundance vector database](#4-Index-abundance-vector-database) to create one
 
 # 4. Index abundance vector database 
 ```
