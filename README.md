@@ -18,7 +18,7 @@ metakssd dist -L shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
 #profiling
 metakssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
 # abundance normalization
-perl possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer > > <species relative abundance profile>
+perl src/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer > > <species relative abundance profile>
 ```
 
 make sure you already have a MarkerDB. If not, you can download a pre-built MarkerDB by:
