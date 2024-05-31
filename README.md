@@ -11,9 +11,9 @@ cd MetaKSSD &&
 make
 ```
 # 2. Metagenome profiling
-make sure you already have a MarkerDB. If not, you can download by:
+make sure you already have a MarkerDB. If not, you can download a pre-built MarkerDB by:
 ```
-# sketched using L3K11.shuf 
+# sketched by L3K11.shuf 
 wget http://www.genomesketchub.com/download/markerdb.L3K11_gtdb_r214.tar.gz
 tar xf markerdb.L3K11_gtdb_r214.tar.gz
 ```
@@ -38,9 +38,9 @@ To retrieve abundance vectors similar to an abundance vector "input.abv" from th
 metakssd composite -r <markerdb> -s<0 or 1> <path/input.abv>
 ```
 Here, the options -s0 and -s1 enable searching based on L1 norm and cosine similarity, respectively.
-Make sure you already have an indexed abundance vector database. If not, you can download by:
+Make sure you already have an indexed abundance vector database. If not, you can download a pre-built abundance vector database by:
 ```
-#sketched using L3K11.shuf 
+#sketched by L3K11.shuf 
 wget http://www.genomesketchub.com/download/markerdb.abvdb.L3K11_gtdb_r214.tar.gz
 tar xf markerdb.abvdb.L3K11_gtdb_r214.tar.gz
 ```
