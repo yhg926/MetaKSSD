@@ -11,21 +11,24 @@ cd MetaKSSD &&
 make
 ```
 # 2. Metagenome profiling
+
+```
+#sketching with k-mer counts tracking
+metakssd dist -L shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
+#profiling
+metakssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
+# abundance normalization
+perl possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer > > <species relative abundance profile>
+```
+
 make sure you already have a MarkerDB. If not, you can download a pre-built MarkerDB by:
 ```
-# sketched by L3K11.shuf 
+# this markerdb is made by L3K11.shuf, make sure you are using the same *.shuf file 
 wget http://www.genomesketchub.com/download/markerdb.L3K11_gtdb_r214.tar.gz
 tar xf markerdb.L3K11_gtdb_r214.tar.gz
 ```
 or skip to [build custom MarkerDB](#5-build-custom-MarkerDB) to create one.
-```
-#sketching with k-mer counts tracking
-metakssd dist -L <*.shuf> -A -o <sample1_sketch> <sample1.fastq>
-#profiling
-kssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
-# abundance normalization
-perl possion.kssd2out.pl < species_coverage.tsv > <minimum overlapped k-mer > > <species relative abundance profile>
-```
+
 # 3. Abundance Vector Searching 
 
 ```
@@ -38,6 +41,7 @@ To retrieve abundance vectors similar to an abundance vector "input.abv" from th
 metakssd composite -r <markerdb> -s<0 or 1> <path/input.abv>
 ```
 Here, the options -s0 and -s1 enable searching based on L1 norm and cosine similarity, respectively.
+
 Make sure you already have an indexed abundance vector database. If not, you can download a pre-built abundance vector database by:
 ```
 #sketched by L3K11.shuf 
