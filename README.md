@@ -35,7 +35,7 @@ If need to covert species abundaces to CAMI format profile, using
 gunzip -d data/*.gz;
 
 #format convertion 
-perl src/sh18.r214.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr214_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr214_pseudoidrelated.tsv > sample1.profile
+perl src/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr214_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr214_pseudoidrelated.tsv 18 > sample1.profile
 ```
 
 
