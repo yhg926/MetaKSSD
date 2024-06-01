@@ -10,58 +10,65 @@ git clone https://github.com/yhg926/MetaKSSD.git &&
 cd MetaKSSD &&
 make
 ```
+## 1.1 Get pre-built MarkerDB (L3K11)
+
+```
+wget http://www.genomesketchub.com/download/markerdb.L3K11_gtdb_r214.tar.gz
+tar xf markerdb.L3K11_gtdb_r214.tar.gz
+```
+This step is only needed when you do not have a MarkerDB. 
+You can also prepare your own MarkerDB, 
+see [build custom MarkerDB](#5-build-custom-MarkerDB).
+
+## 1.2 Prepare gtdbr214 to ncbi taxonomy convertion tables 
+```
+#decompress gtdb to ncbi covertion table
+gunzip -d data/*.gz;
+```
+This step is only needed when you have to convert gtdb to ncbi taxonomy.
+
+## 1.3 Get pre-build Abundance Vector Database (L3K11)
+```
+wget http://www.genomesketchub.com/download/markerdb.abvdb.L3K11_gtdb_r214.tar.gz
+tar xf markerdb.abvdb.L3K11_gtdb_r214.tar.gz
+```
+This step is only needed when you perform abundance vector searching.
+You can also prepare your own Abundance Vector Database, 
+see [Index abundance vector database](#4-Index-abundance-vector-database).
+
 # 2. Metagenome profiling
 
 ```
 #sketching with k-mer counts tracking
 metakssd dist -L shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
-#profiling
+#generate raw profile
 metakssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
 #abundance normalization
 perl src/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer S (default:18)> > <species relative abundance profile>
 ```
-
-make sure you already have a MarkerDB. If not, you can download a pre-built MarkerDB by:
-```
-# this markerdb is made by L3K11.shuf, make sure you are using the same *.shuf file 
-wget http://www.genomesketchub.com/download/markerdb.L3K11_gtdb_r214.tar.gz
-tar xf markerdb.L3K11_gtdb_r214.tar.gz
-```
-or skip to [build custom MarkerDB](#5-build-custom-MarkerDB) to create one.
-
 If need to covert species abundaces to CAMI format profile, using 
 ```
-#decompress gtdb to ncbi covertion table
-gunzip -d data/*.gz;
-
 #format convertion 
 perl src/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr214_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr214_pseudoidrelated.tsv 18 > sample1.profile
 ```
 
-
 # 3. Abundance Vector Searching 
+## 3.1 Generate your abundance vector in a given path
 
 ```
-#generate abundance vector in a given path 
 metakssd composite -r <markerdb> -q <metagenome sketch> -b -o <path>
 ```
-To retrieve abundance vectors similar to an abundance vector "input.abv" from the database "markerdb", we utilized the following command:
+## 3.2 Abundance Vector Searching 
+To retrieve abundance vectors similar to an abundance vector "input.abv" from the database "markerdb":
 
 ```
 metakssd composite -r <markerdb> -s<0 or 1> <path/input.abv>
 ```
 Here, the options -s0 and -s1 enable searching based on L1 norm and cosine similarity, respectively.
 
-Make sure you already have an indexed abundance vector database. If not, you can download a pre-built abundance vector database by:
-```
-#sketched by L3K11.shuf 
-wget http://www.genomesketchub.com/download/markerdb.abvdb.L3K11_gtdb_r214.tar.gz
-tar xf markerdb.abvdb.L3K11_gtdb_r214.tar.gz
-```
-
-or skip to [Index abundance vector database](#4-Index-abundance-vector-database) to create one
-
 # 4. Index abundance vector database 
+Suppose you have many  *.abv generated following [section 3.1](#31-Generate-your-abundance-vector-in-a-given-path).
+Then the abundance vector database could be indexed as follow:
 ```
 #make folder named abundance_Vec under your markerdb path
 mkdir -p <markerdb path>/abundance_Vec
