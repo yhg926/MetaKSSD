@@ -29,7 +29,7 @@ tar xf markerdb.L3K11_gtdb_r214.tar.gz
 ```
 or skip to [build custom MarkerDB](#5-build-custom-MarkerDB) to create one.
 
-If need covert species abundaces to CAMI format profile, using 
+If need to covert species abundaces to CAMI format profile, using 
 ```
 #decompress gtdb to ncbi covertion table
 gunzip -d data/*.gz;
