@@ -22,17 +22,16 @@ see [build custom MarkerDB](#5-build-custom-MarkerDB).
 
 ## 1.2 (Optional) Prepare gtdbr214 to ncbi taxonomy convertion tables 
 ```
-#decompress gtdb to ncbi covertion table
 gunzip -d data/*.gz;
 ```
-This step is only needed when you have to convert gtdb to ncbi taxonomy.
+These files are only needed when you have to convert gtdb to ncbi taxonomy.
 
 ## 1.3 (Optional) Get pre-build Abundance Vector Database (L3K11)
 ```
-wget http://www.genomesketchub.com/download/markerdb.abvdb.L3K11_gtdb_r214.tar.gz
-tar xf markerdb.abvdb.L3K11_gtdb_r214.tar.gz
+wget http://www.genomesketchub.com/download/markerdb.abvdb231227.L3K11_gtdb_r214.tar.gz
+tar xf markerdb.abvdb231227.L3K11_gtdb_r214.tar.gz
 ```
-This step is only needed when you perform abundance vector searching.
+The Abundance Vector Database is only needed when you perform abundance vector searching.
 You can also prepare your own Abundance Vector Database, 
 see [Index abundance vector database](#4-Index-abundance-vector-database).
 
