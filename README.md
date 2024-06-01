@@ -10,7 +10,7 @@ git clone https://github.com/yhg926/MetaKSSD.git &&
 cd MetaKSSD &&
 make
 ```
-## 1.1 Get pre-built MarkerDB (L3K11)
+## 1.1 (Optional) Get pre-built MarkerDB (L3K11)
 
 ```
 wget http://www.genomesketchub.com/download/markerdb.L3K11_gtdb_r214.tar.gz
@@ -20,14 +20,14 @@ This step is only needed when you do not have a MarkerDB.
 You can also prepare your own MarkerDB, 
 see [build custom MarkerDB](#5-build-custom-MarkerDB).
 
-## 1.2 Prepare gtdbr214 to ncbi taxonomy convertion tables 
+## 1.2 (Optional) Prepare gtdbr214 to ncbi taxonomy convertion tables 
 ```
 #decompress gtdb to ncbi covertion table
 gunzip -d data/*.gz;
 ```
 This step is only needed when you have to convert gtdb to ncbi taxonomy.
 
-## 1.3 Get pre-build Abundance Vector Database (L3K11)
+## 1.3 (Optional) Get pre-build Abundance Vector Database (L3K11)
 ```
 wget http://www.genomesketchub.com/download/markerdb.abvdb.L3K11_gtdb_r214.tar.gz
 tar xf markerdb.abvdb.L3K11_gtdb_r214.tar.gz
