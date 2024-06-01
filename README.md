@@ -17,7 +17,7 @@ make
 metakssd dist -L shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
 #profiling
 metakssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
-# abundance normalization
+#abundance normalization
 perl src/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer S (default:18)> > <species relative abundance profile>
 ```
 
