@@ -29,6 +29,16 @@ tar xf markerdb.L3K11_gtdb_r214.tar.gz
 ```
 or skip to [build custom MarkerDB](#5-build-custom-MarkerDB) to create one.
 
+If need covert species abundaces to CAMI format profile, using 
+```
+#decompress gtdb to ncbi covertion table
+gunzip -d data/*.gz;
+
+#fromat convertion 
+perl src/sh18.r214.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr214_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr214_pseudoidrelated.tsv > sample1.profile
+```
+
+
 # 3. Abundance Vector Searching 
 
 ```
