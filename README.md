@@ -13,7 +13,7 @@ make
 ## 1.1 (Optional) Get pre-built MarkerDB (L3K11)
 
 ```
-wget http://www.genomesketchub.com/download/markerdb.L3K11_gtdb_r214.tar.gz
+wget https://zenodo.org/records/11437234/files/markerdb.L3K11_gtdb_r214.tar.gz
 tar xf markerdb.L3K11_gtdb_r214.tar.gz
 ```
 This step is only needed when you do not have a MarkerDB. 
@@ -28,7 +28,7 @@ These files are only needed when you have to convert gtdb to ncbi taxonomy.
 
 ## 1.3 (Optional) Get pre-build Abundance Vector Database (L3K11)
 ```
-wget http://www.genomesketchub.com/download/markerdb.abvdb231227.L3K11_gtdb_r214.tar.gz
+wget https://zenodo.org/records/11437234/files/markerdb.abvdb231227.L3K11_gtdb_r214.tar.gz
 tar xf markerdb.abvdb231227.L3K11_gtdb_r214.tar.gz
 ```
 The Abundance Vector Database is only needed when you perform abundance vector searching.
