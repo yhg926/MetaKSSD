@@ -58,10 +58,10 @@ perl src/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> dat
 metakssd composite -r <markerdb> -q <metagenome sketch> -b -o <path>
 ```
 ## 3.2 Abundance Vector Searching 
-To retrieve abundance vectors similar to an abundance vector "input.abv" from the database "markerdb":
+To retrieve abundance vectors similar to an abundance vector "input.abv" from a markerdb with indexed abv:
 
 ```
-metakssd composite -r <markerdb> -s<0 or 1> <path/input.abv>
+metakssd composite -r <markerdb.abvdb> -s<0 or 1> <path/input.abv>
 ```
 Here, the options -s0 and -s1 enable searching based on L1 norm and cosine similarity, respectively.
 
