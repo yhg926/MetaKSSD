@@ -1,4 +1,4 @@
-#  Instantaneous Metagenome Taxonomic Profiling with MetaKSSD
+#  Instantaneous Metagenomic Taxonomic Profiling with MetaKSSD
 
 MetaKSSD is the second version of KSSD (K-mer Substring Space Sampling/Shuffling Decomposition), designed for instantaneous metagenome taxonomic profiling using WGS fastq data.
 
