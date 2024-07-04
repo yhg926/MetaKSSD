@@ -43,12 +43,21 @@ metakssd dist -L shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
 #generate raw profile
 metakssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
 #abundance normalization
-perl src/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer S (default:18)> > <species relative abundance profile>
+perl src/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer S (default:18)> > <species_relative_abundance_profile>
 ```
-If need to covert species abundaces to CAMI format profile, using 
+If need to covert species abundaces to full gtdb taxonomy profile, using 
+```
+perl src/kssd2out2gtdb_taxonomy_profile.pl <species_relative_abundance_profile> data/gtdbr214_psid2krona_taxonomy.tsv
+```
+
+If need to covert species abundaces to CAMI format profile with NCBI taxonomy, using 
 ```
 #format convertion 
 perl src/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr214_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr214_pseudoidrelated.tsv 18 > sample1.profile
+```
+If need to covert species abundaces to Krona format profile, using
+```
+perl src/kssdcomposite2gtdb_tax_kronafmt.pl <species_coverage.tsv> data/gtdbr214_psid2krona_taxonomy.tsv <outdir>
 ```
 
 # 3. Abundance Vector Searching 
