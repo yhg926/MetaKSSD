@@ -50,12 +50,12 @@ If need to covert species abundaces to full gtdb taxonomy profile, using
 perl src/kssd2out2gtdb_taxonomy_profile.pl <species_relative_abundance_profile> data/gtdbr214_psid2krona_taxonomy.tsv
 ```
 
-If need to covert species abundaces to CAMI format profile with NCBI taxonomy, using 
+If need to covert species_coverage.tsv to CAMI format profile with NCBI taxonomy, using 
 ```
 #format convertion 
 perl src/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr214_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr214_pseudoidrelated.tsv 18 > sample1.profile
 ```
-If need to covert species abundaces to Krona format profile, using
+If need to covert species_coverage.tsv to Krona format profile, using
 ```
 perl src/kssdcomposite2gtdb_tax_kronafmt.pl <species_coverage.tsv> data/gtdbr214_psid2krona_taxonomy.tsv <outdir>
 ```
