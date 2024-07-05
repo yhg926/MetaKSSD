@@ -122,6 +122,11 @@ OPAL benchmarking results on five datasets are available:
 5.	https://yhg926.github.io/KSSD2/OPAL/new_released/
 
 
+# 7. Related papers
+Yi, H. MetaKSSD: Boosting the Scalability of Reference Taxonomic Marker Database and the Performance of Metagenomic Profiling Using Sketch Operations. bioRxiv 2024.06.21.600011 (2024) doi:10.1101/2024.06.21.600011.
+
+
+
 
 
 
