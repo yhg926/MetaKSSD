@@ -4,6 +4,8 @@ MetaKSSD is the second version of KSSD (K-mer Substring Space Sampling/Shuffling
 
 K-mer Substring Space Decomposition (KSSD) facilitates highly efficient genome sketching and enables lossless sketch operations, including union, intersection, and subtraction [doi.org/10.1186/s13059-021-02303-4]. Building upon the KSSD framework, MetaKSSD introduces a novel feature that tracks k-mer counts within the sketch. Leveraging these foundational functionalities, MetaKSSD further innovates methods for constructing a taxonomic marker database (MarkerDB), metagenome taxonomic profiling, and profile searching.
 
+The philosophy behind MetaKSSD: https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD 
+
 # 1. Installation 
 ```
 git clone https://github.com/yhg926/MetaKSSD.git &&
