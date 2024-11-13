@@ -25,7 +25,8 @@ see [build custom MarkerDB](#5-build-custom-MarkerDB).
 
 ## 1.2 (Optional) Prepare gtdbr214 to ncbi taxonomy convertion tables 
 ```
-gunzip -d data/*.gz;
+gunzip -d data/best.gtdbr214_psid2ncbi_specid.tsv.gz;
+gunzip -d data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr214_pseudoidrelated.tsv.gz
 ```
 These files are only needed when you have to convert gtdb to ncbi taxonomy.
 
