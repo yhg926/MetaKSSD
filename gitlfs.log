@@ -1,0 +1,7 @@
+ 2061  git add .gitattributes
+ 2062  git commit -m "modify gitattributes"
+ 2063  git push
+ 2064  git add markerdb/markerdb.L3K10_gtdb_r214_all410k_genomes/*
+ 2065  git lfs ls-files
+ 2066  git commit -m "large file added"
+ 2067  git push
