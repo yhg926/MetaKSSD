@@ -1,12 +1,12 @@
 #!/bin/bash
 
- [ -d "$1" ] || { echo "*.sh <all_gtdb_genomes_dir>" ; exit 1; }
+ [ -d "$1" ] || { echo "USAGE: $0 <all_gtdb_genomes_dir>" ; exit 1; }
 
 PRO_D="."
 KSSD="$PRO_D/bin/metakssd"
 SCRIPT_D="$PRO_D/scripts"
 SCRIPT_NAME="genome_species_labeling.pl"
-SHUF_F="$PRO_D/shuf_files/L3K10.shuf"
+SHUF_F="$PRO_D/shuf_files/L3K11.shuf"
 GENOMES_D=`dirname $1"/any"`
 
 [ -f $KSSD ] || { echo "$KSSD does not exists" ; exit 1 ;}
@@ -14,12 +14,12 @@ GENOMES_D=`dirname $1"/any"`
 [ -f $SHUF_F ] || { echo "$SHUF_F does not exists" ; exit 1 ;}
 [ -d $GENOMES_D ] || { echo "$GENOMES_D does not exists" ; exit 1; }
 
-OUT_D=$GENOMES_D"_L3K10_sketch"
+OUT_D=$GENOMES_D"_L3K11_sketch"
 PAN_D=$OUT_D"_pan"
 SPSP_D=$PAN_D"_union_sp"
 MARKERDB=$OUT_D"_markerdb"
 
-TMP_D="$PRO_D/tmp_dir"
+TMP_D="./tmp_dir"
 mkdir -p $TMP_D
 
 GLIST_F="./$TMP_D/g.list"
