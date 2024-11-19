@@ -25,10 +25,10 @@ static struct argp_option opt_shuffle[] =
 //  { "genomeSize", 'g', "K/M/G/T",0,"Genome size scale ( with K/M/G). K for single or few genes, M for prokayote genome, G for mammals genome. If specified, will be used for determing context length.[M]\v", 1},
   {"halfKmerLen",'k', "INT",  0, "a half of the length of k-mer. For proyakat genome, k = 8 is suggested; for metagenome and mammals, k = 10 or 11 is suggested.[10]\v" },
 	{"halfSubstrLen",'s',"INT", 0,"a half of the length of k-mer substring. [5]\v" },
-	{"level",'l',"INT", 0, "the level of dimensionality reduction, the expectation dimensionality reduction rate is 16^n if set -l = n. [2]\v",7},
+	{"level",'l',"INT", 0, "the level of dimensionality reduction, the expectation dimensionality reduction rate is 16^n if set -l = n. [3]\v",7},
 	{"outfile",'o',"STRING",0,"specify the output file name prefix, if not specify default shuffle named 'default.shuf generated'\v"},
 //	{0,0,0,0,"reserved option for aa:\v",-1},
-	{"usedefault",999,0,0,"All options use default value, which assuming prokaryote genomes, k=8, s=5, and l=2.\v",8}, 
+	{"usedefault",999,0,0,"All options use default value, which assuming prokaryote genomes, k=10, s=5, and l=3.\v",8}, 
   { 0 }
 };
 
@@ -43,7 +43,7 @@ dim_shuffle_stat_t dim_shuffle_stat = {
 0, //id
 10, //k
 5, //subk
-2, // drlevel
+3, // drlevel
 };
 
 char shuf_out_file_prefix[PATHLEN]="./default";
