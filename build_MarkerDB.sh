@@ -28,7 +28,7 @@ G2TAXONOMY_GZ="$PRO_D/data/*_taxonomy_r214.tsv.gz"
 G2TAXONOMY_F="./$TMP_D/genome2taxonomy.tsv"
 GROUPING_F="./$TMP_D/tax_group.tsv"
 
-echo ">> Running Step 1. KSSD sektching $GENOMES_D ..."
+echo ">> Running Step 1. KSSD sketching $GENOMES_D ..."
 start_time=$(date +%s)
 $KSSD dist -L $SHUF_F -o $OUT_D $GENOMES_D
 [ -d $OUT_D ] || { echo "Step 1 aborted"; exit 1 ;}
