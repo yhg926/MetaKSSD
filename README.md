@@ -16,8 +16,11 @@ export PATH=$PATH:$(pwd)/bin
 ## 1.1 (Optional) Get pre-built MarkerDB (L3K11)
 
 ```
+#latest version
+wget https://zenodo.org/records/16317275/files/GTDBr226_genomes_L3K11_sketch_markerdb.tar.gz
+# older version
 wget https://zenodo.org/records/14353354/files/markerdb.gtdb_r214v2_L3K11_sketch.tar.gz
-tar xf markerdb.gtdb_r214v2_L3K11_sketch.tar.gz
+tar xf *markerdb*.tar.gz
 ```
 This step is only needed when you do not have a MarkerDB. 
 You can also prepare your own MarkerDB, 
