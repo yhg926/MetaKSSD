@@ -125,6 +125,9 @@ metakssd set -i <L3K11_union_sp-sketch> -o <markerdb_L3K11> <L3K11_pan-sketch>
 ```
 Alternatively, we have provided an all-in-one workflow for MarKerDB construction based on GTDB r214 genomes.
 ```
+# build gtdbr226
+sh build_MarkerDB_gtdbr226.sh <all_gtdbr226_genomes_dir>
+# gtdbr214
 sh build_MarkerDB.sh <all_gtdbr214_genomes_dir>
 ```
 
