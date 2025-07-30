@@ -11,7 +11,7 @@ For users not familiar with linux command-line, we provide one-click metagenomic
 [Windows OS MetaKSSD Clients](https://youtu.be/ck5af1ewX4w), see [tutorial video](http://www.genomesketchub.com/download/MetaKSSD_Windows.exe)
 
 
-The philosophy behind MetaKSSD: https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD 
+[The philosophy behind MetaKSSD](https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD)
 
 # 1. Installation 
 ```
