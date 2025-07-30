@@ -11,7 +11,8 @@ For users not familiar with linux command-line, we provide one-click metagenomic
 [Windows OS MetaKSSD Clients](https://zenodo.org/records/11437234/files/MetaKSSD_Windows.exe), see [tutorial video](https://youtu.be/ck5af1ewX4w).
 
 
-Users may also be interested in [The philosophy behind MetaKSSD](https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD).
+Users may also be interested in [The philosophy behind MetaKSSD](https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD),
+and [The Difference with Sylph](https://github.com/yhg926/MetaKSSD/wiki/The-Difference-Between-MetaKSSD-and-Sylph).
 
 # 1. Installation 
 ```
