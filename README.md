@@ -26,15 +26,16 @@ This step is only needed when you do not have a MarkerDB.
 You can also prepare your own MarkerDB, 
 see [build custom MarkerDB](#5-build-custom-MarkerDB).
 
-## 1.2 (Optional) Prepare gtdbr214 to ncbi taxonomy convertion tables 
+## 1.2 (Optional) Prepare gtdb to ncbi taxonomy convertion tables 
 ```
-gunzip -d data/best.gtdbr214_psid2ncbi_specid.tsv.gz;
-gunzip -d data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr214_pseudoidrelated.tsv.gz
+gunzip -d data/best.gtdbr[214|226]_psid2ncbi_specid.tsv.gz;
+gunzip -d data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr[214|226]_pseudoidrelated.tsv.gz
 ```
 These files are only needed when you have to convert gtdb to ncbi taxonomy.
 
 ## 1.3 (Optional) Get pre-build Abundance Vector Database (L3K11)
 ```
+#only r214 are avialble currently 
 wget https://zenodo.org/records/11437234/files/markerdb.abvdb231227.L3K11_gtdb_r214.tar.gz
 tar xf markerdb.abvdb231227.L3K11_gtdb_r214.tar.gz
 ```
@@ -59,17 +60,17 @@ perl src/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer S 
 ```
 If need to covert species abundaces to full gtdb taxonomy profile, using 
 ```
-perl scripts/kssd2out2gtdb_taxonomy_profile.pl <species_relative_abundance_profile> data/gtdbr214_psid2krona_taxonomy.tsv
+perl scripts/kssd2out2gtdb_taxonomy_profile.pl <species_relative_abundance_profile> data/gtdbr[214|226]_psid2krona_taxonomy.tsv
 ```
 
 If need to covert species_coverage.tsv to CAMI format profile with NCBI taxonomy, using 
 ```
 #format convertion 
-perl scripts/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr214_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr214_pseudoidrelated.tsv 18 > sample1.profile
+perl scripts/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr[214|226]_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr[214|226]_pseudoidrelated.tsv 18 > sample1.profile
 ```
 If need to covert species_coverage.tsv to Krona format profile, using
 ```
-perl scripts/kssdcomposite2gtdb_tax_kronafmt.pl <species_coverage.tsv> data/gtdbr214_psid2krona_taxonomy.tsv <outdir>
+perl scripts/kssdcomposite2gtdb_tax_kronafmt.pl <species_coverage.tsv> data/gtdbr[214|]_psid2krona_taxonomy.tsv <outdir>
 ```
 
 # 3. Abundance Vector Searching 
@@ -133,7 +134,7 @@ sh build_MarkerDB.sh <all_gtdbr214_genomes_dir>
 
 # 6. MetaKSSD benchmarking results
 
-OPAL benchmarking results on five datasets are available:
+OPAL benchmarking results on five datasets are available (based on r214 markerdb):
 1.	https://yhg926.github.io/KSSD2/OPAL/mouse_gut/
 2.	https://yhg926.github.io/KSSD2/OPAL/marine/
 3.	https://yhg926.github.io/KSSD2/OPAL/strain_madness/
