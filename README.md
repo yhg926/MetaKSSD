@@ -4,7 +4,7 @@ MetaKSSD is the second version of KSSD (K-mer Substring Space Sampling/Shuffling
 
 K-mer Substring Space Decomposition [(KSSD)](https://doi.org/10.1186/s13059-021-02303-4) facilitates highly efficient genome sketching and enables lossless sketch operations, including union, intersection, and subtraction . Building upon the KSSD framework, MetaKSSD introduces a novel feature that tracks k-mer counts within the sketch. Leveraging these foundational functionalities, MetaKSSD further innovates methods for constructing a taxonomic marker database (MarkerDB), metagenome taxonomic profiling, and profile searching.
 
-For users not familiar with linux command-line, we provide one-click metagenomic analysis app:
+For users not familiar with linux command-line, we provide one-click on line metagenomic analysis through Client Apps:
 
 [Mac OS MetaKSSD Clients](https://zenodo.org/records/11437234/files/MetaKSSD_Mac.zip), see [tutorial video](https://youtu.be/-JyctdOiMO4).
 
@@ -13,6 +13,8 @@ For users not familiar with linux command-line, we provide one-click metagenomic
 
 Users may also be interested in [The philosophy behind MetaKSSD](https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD),
 and [its advantages over Sylph](https://github.com/yhg926/MetaKSSD/wiki/The-Difference-Between-MetaKSSD-and-Sylph).
+
+See also the QCed [382,016 NCBI SRA metagenomic profiles](https://zenodo.org/records/11345411/files/all_run_profile.tar.gz) as of Dec. 27, 2023 
 
 # 1. Installation 
 ```
