@@ -1,7 +1,7 @@
 use warnings;
 use diagnostics;
 if(@ARGV != 4){
-	die "*.pl <kssdcomposite_output.tsv> <best.gtdbr207_psid2ncbi_specid.tsv> <ncbitaxid_rank_parentnode_name.gtdbr207_pseudoidrelated.tsv> <shared_K>";
+	die "*.pl <kssdcomposite_output.tsv> <best.gtdbr*_psid2ncbi_specid.tsv> <ncbitaxid_rank_parentnode_name.gtdbr*_pseudoidrelated.tsv> <shared_K>";
 }
 #Ranks:superkingdom|phylum|class|order|family|genus|species
 $shkm_thr = defined $ARGV[3] ? $ARGV[3] : 18 ; 
