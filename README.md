@@ -6,9 +6,9 @@ K-mer Substring Space Decomposition [(KSSD)](https://doi.org/10.1186/s13059-021-
 
 For users not familiar with linux command-line, we provide one-click metagenomic analysis app:
 
-[Mac OS MetaKSSD Clients](http://www.genomesketchub.com/download/MetaKSSD_Mac.zip ), see [tutorial video](https://youtu.be/-JyctdOiMO4)
+[Mac OS MetaKSSD Clients](http://www.genomesketchub.com/download/MetaKSSD_Mac.zip ), see [tutorial video](https://youtu.be/-JyctdOiMO4).
 
-[Windows OS MetaKSSD Clients](https://youtu.be/ck5af1ewX4w), see [tutorial video](http://www.genomesketchub.com/download/MetaKSSD_Windows.exe)
+[Windows OS MetaKSSD Clients](http://www.genomesketchub.com/download/MetaKSSD_Windows.exe), see [tutorial video](https://youtu.be/ck5af1ewX4w).
 
 
 Users may also be interested in [The philosophy behind MetaKSSD](https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD).
