@@ -142,11 +142,11 @@ sh build_MarkerDB.sh <all_gtdbr214_genomes_dir>
 # 6. MetaKSSD benchmarking results
 
 OPAL benchmarking results on five datasets are available (based on r214 markerdb):
-1.	https://yhg926.github.io/KSSD2/OPAL/mouse_gut/
-2.	https://yhg926.github.io/KSSD2/OPAL/marine/
-3.	https://yhg926.github.io/KSSD2/OPAL/strain_madness/
-4.	https://yhg926.github.io/KSSD2/OPAL/rhizosphere/
-5.	https://yhg926.github.io/KSSD2/OPAL/new_released/
+1.	[Mouse gut](https://yhg926.github.io/KSSD2/OPAL/mouse_gut/)
+2.	[Marine](https://yhg926.github.io/KSSD2/OPAL/marine/)
+3.	[Strain_madness](https://yhg926.github.io/KSSD2/OPAL/strain_madness/)
+4.	[Rhizosphere](https://yhg926.github.io/KSSD2/OPAL/rhizosphere/)
+5.	[New_released](https://yhg926.github.io/KSSD2/OPAL/new_released/)
 
 
 # 7. Related papers
