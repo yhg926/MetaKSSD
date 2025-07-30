@@ -48,7 +48,7 @@ while(<$kssdf>){
 
 close $kssdf;
 
-@ranks = ("superkingdom","phylum","class","order","family","genus","species");
+@ranks = ("domain","phylum","class","order","family","genus","species");
 foreach $rank(@ranks){$rankidx{$rank} = 1;};
 
 foreach $sample(keys %data){
