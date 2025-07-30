@@ -48,7 +48,7 @@ while(<$kssdf>){
 
 close $kssdf;
 
-@ranks = ("superkingdom","phylum","class","order","family","genus","species");
+@ranks = ("domain","phylum","class","order","family","genus","species");
 foreach $rank(@ranks){$rankidx{$rank} = 1;};
 
 foreach $sample(keys %data){
@@ -73,9 +73,9 @@ foreach $sample(keys %data){
 
 print "# Taxonomic Profiling Output\n";
 print "\@SampleID:",$sample,"\n";
-print "\@Version:0.9.1\n";
+print "\@Version:xxx\n";
 print "\@Ranks:superkingdom|phylum|class|order|family|genus|species\n";
-print "\@TaxonomyID:ncbi-taxonomy_2021.07.19\n";
+print "\@TaxonomyID:ncbi-taxonomy_2025\n";
 print "\@__program__:kssd2; Pars:shkm_thr:$shkm_thr\n";
 print "\@\@TAXID\tRANK\tTAXPATH\tTAXPATHSN\tPERCENTAGE\n";		
 	foreach $ele (@ranks){
