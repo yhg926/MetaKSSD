@@ -1,7 +1,7 @@
 use warnings;
 use diagnostics;
 if(@ARGV!=2){
-	die "*.pl <kssd2out> <gtdbr214_psid2krona_taxonomy.tsv>";
+	die "*.pl <kssd2out> <gtdbr*_psid2krona_taxonomy.tsv>";
 }
 
 @ranks=('d','p','c','o','f','g','s');
