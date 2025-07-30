@@ -77,7 +77,7 @@ perl scripts/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv>
 ```
 If need to covert species_coverage.tsv to Krona format profile, using
 ```
-perl scripts/kssdcomposite2gtdb_tax_kronafmt.pl <species_coverage.tsv> data/gtdbr[214|]_psid2krona_taxonomy.tsv <outdir>
+perl scripts/kssdcomposite2gtdb_tax_kronafmt.pl <species_coverage.tsv> data/gtdbr[214|226]_psid2krona_taxonomy.tsv <outdir>
 ```
 
 # 3. Abundance Vector Searching 
