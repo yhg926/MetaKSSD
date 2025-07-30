@@ -63,7 +63,7 @@ metakssd dist -L shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
 #generate raw profile
 metakssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
 #abundance normalization
-perl src/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer S (default:18)> > <species_relative_abundance_profile>
+perl scripts/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer S (default:18)> > <species_relative_abundance_profile>
 ```
 If need to covert species abundaces to full gtdb taxonomy profile, using 
 ```
