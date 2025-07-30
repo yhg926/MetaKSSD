@@ -12,7 +12,7 @@ For users not familiar with linux command-line, we provide one-click metagenomic
 
 
 Users may also be interested in [The philosophy behind MetaKSSD](https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD),
-and [The Difference with Sylph](https://github.com/yhg926/MetaKSSD/wiki/The-Difference-Between-MetaKSSD-and-Sylph).
+and [its advantages over Sylph](https://github.com/yhg926/MetaKSSD/wiki/The-Difference-Between-MetaKSSD-and-Sylph).
 
 # 1. Installation 
 ```
