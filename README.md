@@ -6,8 +6,8 @@ K-mer Substring Space Decomposition (KSSD) facilitates highly efficient genome s
 
 For users not familiar with linux command-line, we provide one-click metagenomic analysis app:
 
-MetaKSSD Clients (Mac OS, see tutorial video https://youtu.be/-JyctdOiMO4):
-http://www.genomesketchub.com/download/MetaKSSD_Mac.zip  
+[MetaKSSD Clients](http://www.genomesketchub.com/download/MetaKSSD_Mac.zip ) (Mac OS, see [tutorial video])https://youtu.be/-JyctdOiMO4)):
+
 
 MetaKSSD Clients (Windows OS, see tutorial video: https://youtu.be/ck5af1ewX4w):
 http://www.genomesketchub.com/download/MetaKSSD_Windows.exe
