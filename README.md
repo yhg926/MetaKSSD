@@ -19,8 +19,7 @@ We also provide [382,016 QCed NCBI SRA metagenomic profiles](https://zenodo.org/
 # 1. Installation 
 ```
 git clone https://github.com/yhg926/MetaKSSD.git &&
-cd MetaKSSD &&
-make
+cd MetaKSSD && make
 export PATH=$(pwd)/bin:$PATH
 # To remember METAKSSD PATH permanently 
 echo 'export METAKSSD_PATH=$(pwd)' >> ~/.bashrc
