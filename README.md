@@ -10,8 +10,8 @@ For users not familiar with linux command-line, we provide onspot & online metag
 
 [Windows OS MetaKSSD Clients](https://zenodo.org/records/11437234/files/MetaKSSD_Windows.exe), see [tutorial video](https://youtu.be/ck5af1ewX4w).
 
-Have a try, and you will love it, it is really Cool! 
- <img width="1024" height="1024" alt="ChatGPT Image Jul 31, 2025, 02_37_30 PM" src="https://github.com/user-attachments/assets/7767c004-15a5-4def-b411-f144a5db9d74" />
+Have a try, and you will love it, it is really Cool! <img width="54" height="46" alt="Screen Shot 2025-07-31 at 3 00 26 PM" src="https://github.com/user-attachments/assets/acf048e4-ebf2-4a46-ad27-6779f84b6346" />
+
 
 
 Users may also be interested in [The philosophy behind MetaKSSD](https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD),
