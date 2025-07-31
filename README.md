@@ -61,7 +61,7 @@ One stand profiling (GTDB taxonomy only)
 ```
 ./run_profiling.sh <MarkerDB> <sample1.fq> ...
 ```
-Profiling breakdown (for user customization)
+Step-wise profiling pipeline (for user customization)
 ```
 #sketching with k-mer counts tracking
 metakssd dist -L shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
