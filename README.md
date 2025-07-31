@@ -146,14 +146,18 @@ build_MarkerDB.sh <all_gtdbr214_genomes_dir>
 ```
 
 # 6. MetaKSSD benchmarking results
+## 6.1 Speed and Memory
+[Fig2_revised.pdf](https://github.com/user-attachments/files/21522684/Fig2_revised.pdf)
 
-OPAL benchmarking results on five datasets are available (based on r214 markerdb):
+## 6.2 OPAL benchmarking res
+ults on five datasets are available (based on r214 markerdb):
 1.	[Mouse gut](https://yhg926.github.io/KSSD2/OPAL/mouse_gut/)
 2.	[Marine](https://yhg926.github.io/KSSD2/OPAL/marine/)
 3.	[Strain_madness](https://yhg926.github.io/KSSD2/OPAL/strain_madness/)
 4.	[Rhizosphere](https://yhg926.github.io/KSSD2/OPAL/rhizosphere/)
 5.	[New_released](https://yhg926.github.io/KSSD2/OPAL/new_released/)
 
+[Figure3_final_Metakssd_colorblind.pdf](https://github.com/user-attachments/files/21522675/Figure3_final_Metakssd_colorblind.pdf)
 
 # 7. Related papers
 Yi, H. MetaKSSD: Boosting the Scalability of Reference Taxonomic Marker Database and the Performance of Metagenomic Profiling Using Sketch Operations. bioRxiv 2024.06.21.600011 (2024) doi:10.1101/2024.06.21.600011.
