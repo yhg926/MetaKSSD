@@ -22,7 +22,7 @@ git clone https://github.com/yhg926/MetaKSSD.git &&
 cd MetaKSSD && make
 export PATH=$(pwd)/bin:$PATH
 # To remember METAKSSD PATH permanently 
-echo 'export METAKSSD_PATH=$(pwd)' >> ~/.bashrc
+echo "export METAKSSD_PATH=$(pwd)" >> ~/.bashrc
 source ~/.bashrc
 ```
 ## 1.1 (Optional) Get pre-built MarkerDB (L3K11)
