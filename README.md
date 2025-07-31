@@ -41,8 +41,8 @@ see [build custom MarkerDB](#5-build-custom-MarkerDB).
 
 ## 1.2 (Optional) Prepare gtdb to ncbi taxonomy convertion tables 
 ```
-gunzip -d data/best.gtdbr[214|226]_psid2ncbi_specid.tsv.gz;
-gunzip -d data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr[214|226]_pseudoidrelated.tsv.gz
+gunzip -d $METAKSSD_PATH/data/best.gtdbr[214|226]_psid2ncbi_specid.tsv.gz;
+gunzip -d $METAKSSD_PATH/data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr[214|226]_pseudoidrelated.tsv.gz
 ```
 These files are only needed when you have to convert gtdb to ncbi taxonomy.
 
@@ -65,7 +65,7 @@ One stand profiling (GTDB taxonomy only)
 Step-wise profiling pipeline (for user customization)
 ```
 #sketching with k-mer counts tracking
-metakssd dist -L shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
+metakssd dist -L $METAKSSD_PATH/shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
 #generate raw profile
 metakssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
 #abundance normalization
