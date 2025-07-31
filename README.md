@@ -21,7 +21,8 @@ We also provide [382,016 QCed NCBI SRA metagenomic profiles](https://zenodo.org/
 git clone https://github.com/yhg926/MetaKSSD.git &&
 cd MetaKSSD && make
 export PATH=$(pwd)/bin:$PATH
-# To remember METAKSSD PATH permanently 
+# To remember METAKSSD PATH permanently
+echo "export PATH=$(pwd):$(pwd)/bin:\$PATH" >> ~/.bashrc
 echo "export METAKSSD_PATH=$(pwd)" >> ~/.bashrc
 source ~/.bashrc
 ```
@@ -61,28 +62,28 @@ One stand profiling (GTDB taxonomy only)
 ```
 ./run_profiling.sh <MarkerDB> <sample1.fq> ...
 ```
-Profiling breakdown (for user customization)
+Step-wise profiling pipeline (for user customization)
 ```
 #sketching with k-mer counts tracking
 metakssd dist -L shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
 #generate raw profile
 metakssd composite -r <markerdb> -q <sample1_sketch> > <species_coverage.tsv>
 #abundance normalization
-perl scripts/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer S (default:18)> > <species_relative_abundance_profile>
+perl $METAKSSD_PATH/scripts/possion.kssd2out.pl <species_coverage.tsv> <minimum overlapped k-mer S (default:18)> > <species_relative_abundance_profile>
 ```
 If need to covert species abundaces to full gtdb taxonomy profile, using 
 ```
-perl scripts/kssd2out2gtdb_taxonomy_profile.pl <species_relative_abundance_profile> data/gtdbr[214|226]_psid2krona_taxonomy.tsv
+perl $METAKSSD_PATH/scripts/kssd2out2gtdb_taxonomy_profile.pl <species_relative_abundance_profile> data/gtdbr[214|226]_psid2krona_taxonomy.tsv
 ```
 
 If need to covert species_coverage.tsv to CAMI format profile with NCBI taxonomy, using 
 ```
 #format convertion 
-perl scripts/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr[214|226]_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr[214|226]_pseudoidrelated.tsv 18 > sample1.profile
+perl $METAKSSD_PATH/scripts/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr[214|226]_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr[214|226]_pseudoidrelated.tsv 18 > sample1.profile
 ```
 If need to covert species_coverage.tsv to Krona format profile, using
 ```
-perl scripts/kssdcomposite2gtdb_tax_kronafmt.pl <species_coverage.tsv> data/gtdbr[214|226]_psid2krona_taxonomy.tsv <outdir>
+perl $METAKSSD_PATH/scripts/kssdcomposite2gtdb_tax_kronafmt.pl <species_coverage.tsv> data/gtdbr[214|226]_psid2krona_taxonomy.tsv <outdir>
 ```
 
 # 3. Abundance Vector Searching 
