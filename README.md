@@ -21,7 +21,7 @@ We also provide [382,016 QCed NCBI SRA metagenomic profiles](https://zenodo.org/
 git clone https://github.com/yhg926/MetaKSSD.git &&
 cd MetaKSSD &&
 make
-export PATH=$PATH:$(pwd)/bin
+export PATH=$(pwd)/bin:$PATH
 ```
 ## 1.1 (Optional) Get pre-built MarkerDB (L3K11)
 
