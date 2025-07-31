@@ -150,7 +150,7 @@ build_MarkerDB.sh <all_gtdbr214_genomes_dir>
 
 <img width="812" height="645" alt="Screen Shot 2025-07-31 at 1 17 35 PM" src="https://github.com/user-attachments/assets/ea17814b-748f-4734-939c-bebf071d5487" />
 
-## 6.2 OPAL benchmarking results on five datasets are available (based on r214 markerdb):
+## 6.2 OPAL benchmarking results on [CAMI datasets](https://cami-challenge.org) are available (based on r214 markerdb):
 1.	[Mouse gut](https://yhg926.github.io/KSSD2/OPAL/mouse_gut/)
 2.	[Marine](https://yhg926.github.io/KSSD2/OPAL/marine/)
 3.	[Strain_madness](https://yhg926.github.io/KSSD2/OPAL/strain_madness/)
