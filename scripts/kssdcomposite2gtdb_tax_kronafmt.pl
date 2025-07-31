@@ -1,7 +1,7 @@
 use warnings;
 use diagnostics;
 if(@ARGV != 3){
-  die "*.pl <kssdcomposite_output.tsv> <gtdbr207_psid2krona_taxonomy.tsv> <outdir>";
+  die "*.pl <kssdcomposite_output.tsv> <gtdbr[214|226]_psid2krona_taxonomy.tsv> <outdir>";
 }
 #Ranks:superkingdom|phylum|class|order|family|genus|species
 $median_thr = 1;

@@ -1,6 +1,6 @@
 #!/bin/bash
 [ -d "$1" ] && [ -f "$2" ] || { echo "USAGE: $0 <MarkerDB> <sample1.fq> ..." ; exit 1; }
-PRO_D="."
+PRO_D=$METAKSSD_PATH
 KSSD="$PRO_D/bin/metakssd"
 SCRIPT_D="$PRO_D/scripts"
 SCRIPT_NAME="possion.kssd2out.pl"
