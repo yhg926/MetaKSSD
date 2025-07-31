@@ -145,7 +145,7 @@ build_MarkerDB_gtdbr226.sh <all_gtdbr226_genomes_dir>
 build_MarkerDB.sh <all_gtdbr214_genomes_dir>
 ```
 
-# 6. MetaKSSD benchmarking results (based on GTDBr214 markerdb)
+# 6. MetaKSSD benchmarking results (with GTDBr214 Markerdb)
 ## 6.1 Speed and Memory
 
 <img width="812" height="645" alt="Screen Shot 2025-07-31 at 1 17 35 PM" src="https://github.com/user-attachments/assets/ea17814b-748f-4734-939c-bebf071d5487" />
