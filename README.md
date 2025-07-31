@@ -60,7 +60,7 @@ see [Index abundance vector database](#4-Index-abundance-vector-database).
 
 One stand profiling (GTDB taxonomy only)
 ```
-./run_profiling.sh <MarkerDB> <sample1.fq> ...
+run_profiling.sh <MarkerDB> <sample1.fq> ...
 ```
 Step-wise profiling pipeline (for user customization)
 ```
@@ -140,9 +140,9 @@ metakssd set -i <L3K11_union_sp-sketch> -o <markerdb_L3K11> <L3K11_pan-sketch>
 Alternatively, we have provided an all-in-one workflow for MarKerDB construction based on GTDB r226/r214 genomes.
 ```
 # build gtdbr226
-sh build_MarkerDB_gtdbr226.sh <all_gtdbr226_genomes_dir>
+build_MarkerDB_gtdbr226.sh <all_gtdbr226_genomes_dir>
 # gtdbr214
-sh build_MarkerDB.sh <all_gtdbr214_genomes_dir>
+build_MarkerDB.sh <all_gtdbr214_genomes_dir>
 ```
 
 # 6. MetaKSSD benchmarking results
