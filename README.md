@@ -10,7 +10,8 @@ For users not familiar with linux command-line, we provide onspot & online metag
 
 [Windows OS MetaKSSD Clients](https://zenodo.org/records/11437234/files/MetaKSSD_Windows.exe), see [tutorial video](https://youtu.be/ck5af1ewX4w).
 
-Have a try, and you will love it, it is really cool! 
+Have a try, and you will love it, it is really Cool! https://sdmntprnortheu.oaiusercontent.com/files/00000000-b988-61f4-8592-94a4527492f7/raw?se=2025-07-31T07%3A31%3A51Z&sp=r&sv=2024-08-04&sr=b&scid=f9a2c476-0166-570d-9aa7-d6c95a07ea7e&skoid=a3412ad4-1a13-47ce-91a5-c07730964f35&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-07-31T05%3A57%3A14Z&ske=2025-08-01T05%3A57%3A14Z&sks=b&skv=2024-08-04&sig=EaQsuPEM61vXCJ4wErRbbn1VOVQj296c20i3Vbv0GP4%3D![Uploading image.png…]()
+ 
 
 Users may also be interested in [The philosophy behind MetaKSSD](https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD),
 and [its advantages over Sylph](https://github.com/yhg926/MetaKSSD/wiki/The-Difference-Between-MetaKSSD-and-Sylph).
@@ -164,7 +165,7 @@ build_MarkerDB.sh <all_gtdbr214_genomes_dir>
 # 7. Related papers
 Yi, H. MetaKSSD: Boosting the Scalability of Reference Taxonomic Marker Database and the Performance of Metagenomic Profiling Using Sketch Operations. bioRxiv 2024.06.21.600011 (2024) doi:10.1101/2024.06.21.600011.
 
-
+Yi, H., Lin, Y., Lin, C. & Jin, W. KSSD: Sequence dimensionality reduction by k-mer substring space sampling enables real-time large-scale datasets analysis. Genome Biol 22, (2021).
 
 
 
