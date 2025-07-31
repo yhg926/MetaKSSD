@@ -112,7 +112,7 @@ metakssd composite -r <markerdb path> -i
 # 5. build custom MarkerDB
 ```
 # sketching reference genomes
-metakssd dist -L <*.shuf> -o <L3K11_sketch> <all genomes Dir>
+metakssd dist -L <L3K11.shuf> -o <L3K11_sketch> <all genomes Dir>
 # print genome name
 metakssd set -P <L3K11_sketch> > <genome_name.txt>
 
