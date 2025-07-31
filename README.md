@@ -10,8 +10,9 @@ For users not familiar with linux command-line, we provide onspot & online metag
 
 [Windows OS MetaKSSD Clients](https://zenodo.org/records/11437234/files/MetaKSSD_Windows.exe), see [tutorial video](https://youtu.be/ck5af1ewX4w).
 
-Have a try, and you will love it, it is really Cool! https://sdmntprnortheu.oaiusercontent.com/files/00000000-b988-61f4-8592-94a4527492f7/raw?se=2025-07-31T07%3A31%3A51Z&sp=r&sv=2024-08-04&sr=b&scid=f9a2c476-0166-570d-9aa7-d6c95a07ea7e&skoid=a3412ad4-1a13-47ce-91a5-c07730964f35&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-07-31T05%3A57%3A14Z&ske=2025-08-01T05%3A57%3A14Z&sks=b&skv=2024-08-04&sig=EaQsuPEM61vXCJ4wErRbbn1VOVQj296c20i3Vbv0GP4%3D![Uploading image.png…]()
- 
+Have a try, and you will love it, it is really Cool! 
+ <img width="1024" height="1024" alt="ChatGPT Image Jul 31, 2025, 02_37_30 PM" src="https://github.com/user-attachments/assets/7767c004-15a5-4def-b411-f144a5db9d74" />
+
 
 Users may also be interested in [The philosophy behind MetaKSSD](https://github.com/yhg926/MetaKSSD/wiki/Philosophy-behind-MetaKSSD),
 and [its advantages over Sylph](https://github.com/yhg926/MetaKSSD/wiki/The-Difference-Between-MetaKSSD-and-Sylph).
