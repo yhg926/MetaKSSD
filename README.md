@@ -45,10 +45,11 @@ see [build custom MarkerDB](#5-build-custom-MarkerDB).
 
 ## 1.2 (Optional) Prepare gtdb to ncbi taxonomy convertion tables 
 ```
+#if you use markerdb earlier than r226  
 gunzip -d $METAKSSD_PATH/data/best.gtdbr[214|226]_psid2ncbi_specid.tsv.gz;
 gunzip -d $METAKSSD_PATH/data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr[214|226]_pseudoidrelated.tsv.gz
 ```
-These files are only needed when you have to convert gtdb to ncbi taxonomy.
+These files are only needed when you have to convert gtdb to ncbi taxonomy and the markerdb is earlier than r226.
 
 ## 1.3 (Optional) Get pre-build Abundance Vector Database (L3K11)
 ```
@@ -80,9 +81,11 @@ If need to covert species abundaces to full gtdb taxonomy profile, using
 perl $METAKSSD_PATH/scripts/kssd2out2gtdb_taxonomy_profile.pl <species_relative_abundance_profile> data/gtdbr[214|226]_psid2krona_taxonomy.tsv
 ```
 
-If need to covert species_coverage.tsv to CAMI format profile with NCBI taxonomy, using 
+If need to covert to CAMI format profile with NCBI taxonomy, using 
 ```
-#format convertion 
+# for profile annotation later than r226 (need taxonkit installed)
+$METAKSSD_PATH/scripts/mk_cami_from_profile.sh -m $METAKSSD_PATH/data/r226.best.gtdb_species2ncbi_species_taxid.tsv.gz -i <species_relative_abundance_profile> -o all_samples_cami.profile
+# for earlier profile annotation
 perl $METAKSSD_PATH/scripts/possion.kssdcomposite2taxonomy_profilefmt.pl <species_coverage.tsv> data/best.gtdbr[214|226]_psid2ncbi_specid.tsv data/scienficaname.ncbitaxid_rank_parentnode_name.gtdbr[214|226]_pseudoidrelated.tsv 18 > sample1.profile
 ```
 If need to covert species_coverage.tsv to Krona format profile, using
