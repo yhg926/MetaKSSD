@@ -63,11 +63,11 @@ see [Index abundance vector database](#4-Index-abundance-vector-database).
 
 # 2. Metagenome profiling
 
-One stand profiling (GTDB taxonomy only)
+One-step profiling (GTDB taxonomy only)
 ```
 run_profiling.sh <MarkerDB> <sample1.fq> ...
 ```
-Step-wise profiling pipeline (for user customization)
+Step-by-step profiling pipeline (for user customization)
 ```
 #sketching with k-mer counts tracking
 metakssd dist -L $METAKSSD_PATH/shuf_files/L3K11.shuf -A -o <sample1_sketch> <sample1.fastq>
@@ -121,14 +121,14 @@ metakssd composite -r <markerdb path> -i
 
 # 5. Build custom MarkerDB
 
-One stand MarkerDB construction
+One-step MarkerDB construction
 ```
 # build gtdbr226
 build_MarkerDB_gtdbr226.sh <all_gtdbr226_genomes_dir>
 # gtdbr214
 build_MarkerDB.sh <all_gtdbr214_genomes_dir>
 ```
-Step-wise MarkerDB construction (for user customization)
+Step-by-step MarkerDB construction (for user customization)
 ```
 # sketching reference genomes
 metakssd dist -L <L3K11.shuf> -o <L3K11_sketch> <all genomes Dir>
