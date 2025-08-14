@@ -63,7 +63,7 @@ see [Index abundance vector database](#4-Index-abundance-vector-database).
 
 # 2. Metagenome profiling
 
-One stop profiling (GTDB taxonomy only)
+One-stop profiling (GTDB taxonomy only)
 ```
 run_profiling.sh <MarkerDB> <sample1.fq> ...
 ```
@@ -121,7 +121,7 @@ metakssd composite -r <markerdb path> -i
 
 # 5. Build custom MarkerDB
 
-One stop MarkerDB construction
+One-stop MarkerDB construction
 ```
 # build gtdbr226
 build_MarkerDB_gtdbr226.sh <all_gtdbr226_genomes_dir>
