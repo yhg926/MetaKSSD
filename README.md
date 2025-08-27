@@ -65,6 +65,7 @@ see [Index abundance vector database](#4-Index-abundance-vector-database).
 
 One-stop profiling (GTDB taxonomy only)
 ```
+# one .fq file per sample 
 run_profiling.sh <MarkerDB> <sample1.fq> ...
 ```
 Step-by-step profiling pipeline (for user customization)
