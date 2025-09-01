@@ -172,7 +172,7 @@ metakssd set -i <L3K11_union_sp-sketch> -o <markerdb_L3K11> <L3K11_pan-sketch>
 <img width="682" height="680" alt="Screen Shot 2025-07-31 at 1 19 54 PM" src="https://github.com/user-attachments/assets/d2e688c7-2f35-45fc-b309-b4c209389862" />
 
 # 7. Related papers
-Yi, H. MetaKSSD: Boosting the Scalability of Reference Taxonomic Marker Database and the Performance of Metagenomic Profiling Using Sketch Operations. bioRxiv 2024.06.21.600011 (2024) doi:10.1101/2024.06.21.600011.
+Yi, H., Lu, X. & Chang, Q. MetaKSSD: boosting the scalability of the reference taxonomic marker database and the performance of metagenomic profiling using sketch operations. Nat Comput Sci (2025). https://doi.org/10.1038/s43588-025-00855-0
 
 Yi, H., Lin, Y., Lin, C. & Jin, W. KSSD: Sequence dimensionality reduction by k-mer substring space sampling enables real-time large-scale datasets analysis. Genome Biol 22, (2021).
 
