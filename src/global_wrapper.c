@@ -26,6 +26,20 @@ static struct argp_option opt_global[] = {
 	{ 0 }
 };
 
+static char citations[] = 
+"In keeping with academic convention, please cite the works on which your article is based.\n\n"
+"If you use MetaKSSD, please cite:\n\n"
+"Yi, H., Lu, X., & Chang, Q. (2025). MetaKSSD: boosting the scalability of the reference\n"
+"taxonomic marker database and the performance of metagenomic profiling using sketch operations.\n"
+"Nature Computational Science. https://doi.org/10.1038/s43588-025-00855-0\n\n"
+
+"If you also refer to the K-mer Substring Space Sampling and Decomposition (KSSD) method, please\n"
+"additionally cite:\n\n"
+"Yi, H., Lin, Y., Lin, C., et al. (2021). Kssd: sequence dimensionality reduction by k-mer substring\n"
+"space sampling enables real-time large-scale datasets analysis. Genome Biology, 22, 84.\n"
+"https://doi.org/10.1186/s13059-021-02303-4\v\n"
+;
+
 static char doc_license[] = 
 "\n"
 		"  Copyright 2019 Huiguang Yi. All Rights Reservered.\n\n"
@@ -62,7 +76,10 @@ static char doc_global[] =
 "\n"
       "  composite	metagenomics composition analysis.\n"
 
+"\v\n"
+"Documents:	https://github.com/yhg926/MetaKSSD/blob/MetaKSSD/README.md\n"
 "\n"
+
 ;
 
 
@@ -101,7 +118,7 @@ static error_t parse_global(int key, char* arg, struct argp_state* state)
   }
   else if(key == ARGP_KEY_NO_ARGS){
         state->name = long_domain;
-				printf("\n%s\n\n",argp_program_version);
+				printf("\n%s\n\n%s",argp_program_version,citations);
 				printf("Unit_space_size = %d\n\n", COMPONENT_SZ);
 				printf("Type 'kssd --license' for license and copyright information.\n\n");
         argp_state_help(state,stdout,ARGP_HELP_SHORT_USAGE);
