@@ -77,12 +77,9 @@ static char doc_global[] =
       "  composite	metagenomics composition analysis.\n"
 
 "\v\n"
-"Documents:	https://github.com/yhg926/MetaKSSD/blob/MetaKSSD/README.md\n"
-"\n\n"
+"Documents:	https://github.com/yhg926/MetaKSSD/blob/MetaKSSD/README.md\n\n"
 "Examples:\n"
-"	run_profiling.sh GTDBr226_genomes_L3K11_sketch_markerdb ERR598952.fastq\n"
-"\n\n"
-
+"	run_profiling.sh GTDBr226_genomes_L3K11_sketch_markerdb ERR598952.fastq\n\n"
 ;
 
 
