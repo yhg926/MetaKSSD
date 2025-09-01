@@ -78,7 +78,9 @@ static char doc_global[] =
 
 "\v\n"
 "Documents:	https://github.com/yhg926/MetaKSSD/blob/MetaKSSD/README.md\n"
-"\n"
+"\n\n"
+"Examples: run_profiling.sh GTDBr226_genomes_L3K11_sketch_markerdb ERR598952.fastq\n"
+"\n\n"
 
 ;
 
