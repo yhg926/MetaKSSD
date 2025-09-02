@@ -4,7 +4,7 @@ use warnings;
 use diagnostics;
 
 # Usage: script.pl <kssd2out> <data/gtdbr*_psid2krona_taxonomy.tsv[.gz]>
-die "*.pl <kssd2out> <data/gtdbr*_psid2krona_taxonomy.tsv[.gz]>\n" if @ARGV != 2;
+die "*.pl <MetaKSSD_out> <data/gtdbr*_psid2krona_taxonomy.tsv[.gz]>\n" if @ARGV != 2;
 
 my @ranks = qw(d p c o f g s);
 my ($kssd_out_path, $map_path) = @ARGV;

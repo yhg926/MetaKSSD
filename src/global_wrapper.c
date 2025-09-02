@@ -80,6 +80,9 @@ static char doc_global[] =
 "Documents:	https://github.com/yhg926/MetaKSSD/blob/MetaKSSD/README.md\n\n"
 "Examples:\n"
 "	run_profiling.sh GTDBr226_genomes_L3K11_sketch_markerdb ERR598952.fastq\n\n"
+"	perl $METAKSSD_PATH/scripts/kssd2out2gtdb_taxonomy_profile.pl \\ \n"
+"		ERR598952.fastq_metakssd.profile.tsv \\ \n"
+"		$METAKSSD_PATH/data/gtdbr226_psid2krona_taxonomy.tsv.gz\n\n"
 ;
 
 
