@@ -874,8 +874,9 @@ int grouping_genomes(char* taxfile){
     for(int t = 0; t < subset->taxn; t++){
       if(subset->tax[t].taxid == 0) continue;// ignore taxid 0
 				int hashsize = 0;
-				for(int n = 1; n <= subset->tax[t].gids[0];n++)
-					hashsize += (tmpcombcoidx[subset->tax[t].gids[n]+1] - tmpcombcoidx[subset->tax[t].gids[n]]) ;				
+int n; 
+				for( n = 1; n <= subset->tax[t].gids[0];n++)
+					hashsize += (tmpcombcoidx[subset->tax[t].gids[n]+1] - tmpcombcoidx[subset->tax[t].gids[n]]) ;
 				//caution!: hashsize must be primer otherwise hashtable will overflow
 				int primer_ind = LOG2(hashsize * 1.5);		
 				tax_dict_size[t] = hashsize = primer_ind > 7 ? primer[primer_ind - 7] : primer[0] ;											
