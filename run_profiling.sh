@@ -15,12 +15,14 @@ additionally cite:
 Yi, H., Lin, Y., Lin, C., et al. (2021). Kssd: sequence dimensionality reduction by k-mer substring
 space sampling enables real-time large-scale datasets analysis. Genome Biology, 22, 84.
 https://doi.org/10.1186/s13059-021-02303-4
+
+   
 EOF
 )
 
 echo "$citations"
 
-[ -d "$1" ] && [ -f "$2" ] || { echo "USAGE: $0 <MarkerDB> <sample1.fq> ..." ; exit 1; }
+[ -d "$1" ] && [ -f "$2" ] || { echo "USAGE: $0 <MarkerDB> <sample1.fq> ..." ; echo " "; exit 1; }
 PRO_D=$METAKSSD_PATH
 KSSD="$PRO_D/bin/metakssd"
 SCRIPT_D="$PRO_D/scripts"
