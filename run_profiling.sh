@@ -53,7 +53,7 @@ $KSSD composite -r $MARKERDB -q $OUT_SKTCH > $RAW_RSLT_F
 perl $SCRIPT_D/$SCRIPT_NAME $RAW_RSLT_F 18  > $OUT_PROFILE_F
 end_time=$(date +%s)
 echo "... MetaKSSD profile created!: $OUT_PROFILE_F. Elapsed time: $((end_time - start_time)) seconds."
-#rm -r $TMP_D
+rm -r $TMP_D
 
 
 
