@@ -78,6 +78,8 @@ static char doc_global[] =
 
 "\v\n"
 "Documents:	https://github.com/yhg926/MetaKSSD/blob/MetaKSSD/README.md\n\n"
+"Latest MarkerDB:\n"
+"	https://zenodo.org/records/16317275/files/GTDBr226_genomes_L3K11_sketch_markerdb.tar.gz\n\n"
 "Examples:\n"
 "	run_profiling.sh GTDBr226_genomes_L3K11_sketch_markerdb ERR598952.fastq\n\n"
 "	perl $METAKSSD_PATH/scripts/kssd2out2gtdb_taxonomy_profile.pl \\ \n"
