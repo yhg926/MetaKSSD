@@ -6,6 +6,7 @@
 #ifdef _OPENMP
 	#include <omp.h>
 #endif
+#include <sys/types.h>
 
 const char mco_gids_prefix[] = "mco";
 const char mco_idx_prefix[] = "mco.index";
@@ -45,7 +46,7 @@ void combco2mco(const char *mcodirname, const char *codirname, int cofnum, int c
 				if(row_offset[ind] == 0) mco[ind] = malloc(GID_ARR_SZ*sizeof(gidobj_t));
 				else if ((row_offset[ind]*2 >= GID_ARR_SZ) ){
 					//test if row_offset[ind] is pow of 2
-					if ( ((ulong)row_offset[ind] & ((ulong)row_offset[ind] -1))  == 0) {
+					if ( ((unsigned long)row_offset[ind] & ((unsigned long)row_offset[ind] -1))  == 0) {
 //20220801: double relloc size is much faster and memory saving than increasement of unit of GID_ARR_SZ, reason ?
 						mco[ind] = realloc( mco[ind], 2*row_offset[ind] * sizeof(gidobj_t) );
 					}
