@@ -13,6 +13,7 @@
 #include <math.h>
 #include <libgen.h>
 #include <dirent.h>
+#include <stdint.h>
 
 const char binVec_suffix[] = "abv";
 const char abunMtx_suffix[] = "abm";
@@ -493,6 +494,10 @@ int index_abv(composite_opt_t *composite_opt)
 	return 1;
 }
 
+double robust_weight_from_counts_band(const uint32_t *counts, size_t n_markers,
+                                      int L_min,      // e.g., 2 (drop singletons)
+                                      double pct_top, // e.g., 0.95 (keep bottom 95% of positives)
+                                      int *c_out, double *lambda_hat_out);
 int **ref_abund; // make it global, seen by qsort comparetor
 // this version get_species_abundance () assume few qry input genome,
 // it waste time in reading qry in for qry.infile_num loop
@@ -673,9 +678,8 @@ int get_species_abundance(composite_opt_t *composite_opt)
 		float binVecsum = 0;
 		for (int i = 0; i < ref_dstat.infile_num; i++)
 		{
-			int kmer_num = ref_abund[sort_ref[i]][0]; // overlapped kmer_num
-			if (kmer_num < MIN_KM_S)
-				break;
+			int kmer_num = ref_abund[sort_ref[i]][0]; // overlapped kmer_num i.e. kmer with abundance >0
+			if (kmer_num < MIN_KM_S) break;
 			qsort(ref_abund[sort_ref[i]] + 1, kmer_num, sizeof(int), comparator);
 			// average
 			int sum = 0;
@@ -692,6 +696,12 @@ int get_species_abundance(composite_opt_t *composite_opt)
 				lastsum += ref_abund[sort_ref[i]][n];
 				lastn++;
 			}
+			int c_out;
+			double lambda_hat_out;
+			double abund_wght = robust_weight_from_counts_band((const uint32_t *)(ref_abund[sort_ref[i]] + 1), kmer_num, 
+                                      2, //int L_min,  e.g., 2 (drop singletons)
+                                      0.95, // e.g., 0.95 (keep bottom 95% of positives)
+                                      &c_out, &lambda_hat_out);
 			// set binary vector
 			if (composite_opt->b)
 			{
@@ -705,7 +715,8 @@ int get_species_abundance(composite_opt_t *composite_opt)
 			}
 			else
 			{
-				printf("%s\t%s\t%d\t%f\t%f\t%d\t%d\n", qryname[qn], refname[sort_ref[i]], kmer_num, (float)sum / kmer_num, (float)lastsum / lastn, ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][kmer_num]);
+				printf("%s\t%s\t%d\t%f\t%lf\t%d\t%d\n", qryname[qn], refname[sort_ref[i]], kmer_num, (float)sum / kmer_num, abund_wght, ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][kmer_num]);
+				//printf("%s\t%s\t%d\t%f\t%f\t%d\t%d\n", qryname[qn], refname[sort_ref[i]], kmer_num, (float)sum / kmer_num, (float)lastsum / lastn, ref_abund[sort_ref[i]][median_idx], ref_abund[sort_ref[i]][kmer_num]);
 			}
 		}
 		// output binary vector
@@ -754,4 +765,107 @@ int comparator_measure(const void *a, const void *b)
 		return -1;
 	else
 		return 0;
+}
+
+#include <stddef.h>
+
+static int cmp_u32(const void *a, const void *b){
+    uint32_t x = *(const uint32_t*)a, y = *(const uint32_t*)b;
+    return (x>y) - (x<y);
+}
+
+// Poisson CDF F(k; λ) via forward recursion
+static double pois_cdf(int k, double lambda){
+    if (k < 0) return 0.0;
+    if (lambda < 1e-12) return 1.0; // nearly all mass at 0
+    double term = exp(-lambda); // p0
+    double sum  = term;         // F(0)
+    for (int i = 1; i <= k; ++i){
+        term *= lambda / i;     // p_i
+        sum  += term;
+        if (term < 1e-18 * sum) break;
+    }
+    if (sum < 0.0) sum = 0.0; 
+	if (sum > 1.0) sum = 1.0;
+    return sum;
+}
+
+// r_{L,c}(λ) = [F(c)-F(L-1)] / [ λ * ( F(c-1) - F(L-2) ) ]
+static double rc_band(int L, int c, double lambda){
+    double Fc   = pois_cdf(c,   lambda);
+    double FL1  = pois_cdf(L-1, lambda);
+    double Fc1  = pois_cdf(c-1, lambda);
+    double FL2  = pois_cdf(L-2, lambda);
+    double num  = Fc - FL1;
+    double den  = lambda * fmax(Fc1 - FL2, 1e-300);
+    double r    = num / den;
+    if (r < 1e-18) r = 1e-18;
+    return r;
+}
+
+// Solve r_{L,c}(λ) = r_obs by bisection on λ
+static double invert_lambda_band(int L, int c, double r_obs){
+    if (r_obs <= 1e-18) return 0.0;
+    if (r_obs >= 1.0)   r_obs = 0.999999999999;
+    double lo = 1e-12, hi = 1.0;
+    // Expand hi until rc_band(L,c,hi) < r_obs (r decreases with λ in practice)
+    for (int it = 0; it < 40 && rc_band(L,c,hi) > r_obs; ++it) hi *= 2.0;
+    for (int it = 0; it < 80; ++it){
+        double mid = 0.5*(lo+hi);
+        double rmid = rc_band(L,c,mid);
+        if (rmid > r_obs) lo = mid; else hi = mid;
+        if (fabs(hi-lo) <= 1e-12 * fmax(1.0, mid)) break;
+    }
+    return 0.5*(lo+hi);
+}
+
+// Compute unnormalized weight w = n * λ_hat from per-marker counts,
+// dropping Y < L and censoring Y > c (c chosen from a percentile).
+double robust_weight_from_counts_band(const uint32_t *counts, size_t n_markers,
+                                      int L_min,      // e.g., 2 (drop singletons)
+                                      double pct_top, // e.g., 0.95 (keep bottom 95% of positives)
+                                      int *c_out, double *lambda_hat_out)
+{
+    if (n_markers == 0) { if(c_out)*c_out=0; if(lambda_hat_out)*lambda_hat_out=0; return 0.0; }
+
+    // Collect positive counts
+    uint32_t *pos = (uint32_t*)malloc(n_markers * sizeof(uint32_t));
+    size_t m = 0;
+    for (size_t i = 0; i < n_markers; ++i) if (counts[i] > 0) pos[m++] = counts[i];
+    if (m == 0) { free(pos); if(c_out)*c_out=0; if(lambda_hat_out)*lambda_hat_out=0; return 0.0; }
+
+    // Choose c from percentile among positives
+    qsort(pos, m, sizeof(uint32_t), cmp_u32);
+    size_t idx = (size_t)floor(pct_top * (m - 1));
+    if (idx >= m) idx = m - 1;
+    int c = (int)pos[idx];
+    if (c < L_min) c = L_min;
+
+    // Compute U and H within [L_min .. c]
+    uint64_t U = 0, H = 0;
+    for (size_t i = 0; i < m; ++i){
+        uint32_t y = pos[i];
+        if ((int)y < L_min) continue;
+        if (y > (uint32_t)c) continue;
+        ++U;
+        H += y;
+    }
+    free(pos);
+
+    if (U == 0 || H == 0) {
+        if (c_out) *c_out = c;
+        if (lambda_hat_out) *lambda_hat_out = 0.0;
+        return 0.0;
+    }
+
+    double r_obs = (double)U / (double)H;
+    if (r_obs <= 1e-18) r_obs = 1e-18;
+    if (r_obs >= 0.999999999999) r_obs = 0.999999999999;
+
+    double lambda_hat = invert_lambda_band(L_min, c, r_obs);
+    if (lambda_hat_out) *lambda_hat_out = lambda_hat;
+    if (c_out) *c_out = c;
+
+    // Unnormalized abundance weight
+    return (double)n_markers * lambda_hat;
 }
