@@ -30,6 +30,22 @@ echo "export PATH=$(pwd):$(pwd)/bin:\$PATH" >> ~/.bashrc
 echo "export METAKSSD_PATH=$(pwd)" >> ~/.bashrc
 source ~/.bashrc
 ```
+You can install via conda:
+```
+conda install --channel https://conda.anaconda.org/luxiaoxin2 metakssd
+```
+and apt
+```
+#1、添加PPA源
+sudo add-apt-repository ppa:metakssd/metakssd -y
+#2、更新源
+sudo apt update
+#3、安装 metakssd
+sudo apt install metakssd
+#4、验证安装成功
+metakssd --help
+```
+
 ## 1.1 (Optional) Get pre-built MarkerDB (L3K11)
 
 ```
