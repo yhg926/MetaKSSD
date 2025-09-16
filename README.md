@@ -30,7 +30,7 @@ echo "export PATH=$(pwd):$(pwd)/bin:\$PATH" >> ~/.bashrc
 echo "export METAKSSD_PATH=$(pwd)" >> ~/.bashrc
 source ~/.bashrc
 ```
-You can install via conda:
+You can also install via conda:
 ```
 conda install --channel https://conda.anaconda.org/luxiaoxin2 metakssd
 ```
