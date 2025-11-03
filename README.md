@@ -1,6 +1,8 @@
 #  Instantaneous Metagenomic Taxonomic Profiling with MetaKSSD
 
-MetaKSSD is the second version of KSSD (K-mer Substring Space Sampling/Shuffling Decomposition), designed for instantaneous metagenome taxonomic profiling using WGS fastq data.
+MetaKSSD is the second version of KSSD (K-mer Substring Space Sampling/Shuffling Decomposition), designed for instantaneous metagenome taxonomic profiling using WGS fastq data. 
+
+Note: MetaKSSD currently not support amplican (e.g. 16S) data; Virus metagenome might not be detected using our default 4096-fold reduction (L3K*.shuf) and GTDB markerDB.     
 
 K-mer Substring Space Decomposition [(KSSD)](https://doi.org/10.1186/s13059-021-02303-4) facilitates highly efficient genome sketching and enables lossless sketch operations, including union, intersection, and subtraction . Building upon the KSSD framework, MetaKSSD introduces a novel feature that tracks k-mer counts within the sketch. Leveraging these foundational functionalities, MetaKSSD further innovates methods for constructing a taxonomic marker database (MarkerDB), metagenome taxonomic profiling, and profile searching.
 
